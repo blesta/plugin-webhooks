@@ -1,0 +1,81 @@
+        <?php
+        echo ($message ?? null);
+
+        $links = [
+            ['name' => $this->_('AdminMain.index.category_incoming', true) . ' <span>(' . (isset($type_count['incoming']) ? $this->Html->safe($type_count['incoming']) : null) . ')</span>', 'current' => ((isset($type) ? $type : null) == 'incoming' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/webhooks/admin_main/index/incoming/', 'class' => 'ajax']],
+            ['name' => $this->_('AdminMain.index.category_outgoing', true) . ' <span>(' . (isset($type_count['outgoing']) ? $this->Html->safe($type_count['outgoing']) : null) . ')</span>', 'current' => ((isset($type) ? $type : null) == 'outgoing' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/webhooks/admin_main/index/outgoing/', 'class' => 'ajax']],
+        ];
+        $link_buttons = [
+            [
+                'icon' => 'fas fa-plus',
+                'name' => '',
+                'attributes' => [
+                    'title' => $this->_('AdminMain.index.categorylink_addwebhook', true),
+                    'href' => $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/add/')
+                ]
+            ]
+        ];
+
+        $this->Widget->clear();
+        $this->Widget->setLinks($links);
+        $this->Widget->setLinkButtons($link_buttons);
+        $this->Widget->create($this->_('AdminMain.index.boxtitle_webhooks', true), ['id' => 'admin_main'], ($render_section ?? null));
+
+        if (($webhooks ?? false) && ($num_tickets = count($webhooks)) > 0) {
+        ?>
+        <table class="table" id="webhook_list">
+            <tr class="heading_row">
+                <td><?php $this->_('AdminMain.index.heading_callback');?></td>
+                <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/index/' . (isset($type) ? $type : null) . '/?sort=event&order=' . ($sort == 'event' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'event' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.index.heading_event');?></a></span></td>
+                <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/index/' . (isset($type) ? $type : null) . '/?sort=method&order=' . ($sort == 'method' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'method' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.index.heading_method');?></a></span></td>
+                <td class="last"><?php $this->_('AdminMain.index.heading_options');?></td>
+            </tr>
+            <?php
+            // Display all webhooks
+            $i = 0;
+            foreach ($webhooks as $webhook) {
+            ?>
+            <tr<?php echo (($i++%2 == 1) ? ' class="odd_row"' : '');?>>
+                <td><?php echo $this->Html->safe($webhook->callback ?? '');?></td>
+                <td><?php echo $this->Html->safe($webhook->event ?? '');?></td>
+                <td><?php echo $this->Html->safe(strtoupper($webhook->method ?? ''));?></td>
+                <td class="last">
+                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/edit/' . $webhook->id);?>"><?php $this->_('AdminMain.index.option_edit');?></a>,
+                    <?php
+                    $this->Form->create($this->base_uri . 'plugin/webhooks/admin_main/delete/');
+                    $this->Form->fieldHidden('id', ($webhook->id ?? null));
+                    ?>
+                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/delete/');?>" class="manage" rel="<?php $this->_('AdminMain.modal.delete_text');?>"><?php $this->_('AdminMain.index.option_delete');?></a>
+                    <?php
+                    $this->Form->end();
+                    ?>
+                </td>
+            </tr>
+            <?php
+            }
+            unset($i);
+            ?>
+        </table>
+        <?php
+            // Set pagination
+            $this->Pagination->build();
+        } else {
+        ?>
+        <div class="empty_section">
+            <div class="empty_box">
+                <?php $this->_('AdminMain.index.no_results');?>
+            </div>
+        </div>
+        <?php
+        }
+
+        $this->Widget->end();
+        ?>
+
+<?php
+$this->Javascript->setInline("
+$(document).ready(function() {
+    // Handle confirmation
+    $('#webhook_list a.manage[rel]').blestaModalConfirm({base_url: '" . $this->base_uri . "', close: '" . $this->_('AppController.modal.text_close', true) . "', submit: true});
+});
+");

@@ -1,0 +1,11 @@
+{
+    "version": "1.0.0",
+    "name": "WebhooksPlugin.name",
+    "description": "WebhooksPlugin.description",
+    "authors": [
+        {
+            "name": "Phillips Data, Inc.",
+            "url": "http://blesta.com/"
+        }
+    ]
+}

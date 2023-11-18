@@ -1,0 +1,15 @@
+{
+    "name": "blesta/webhooks",
+    "description": "Sends automated HTTP requests based on events, and listen to HTTP requests to trigger specific events.",
+    "license": "proprietary",
+    "type": "blesta-plugin",
+    "require": {
+        "blesta/composer-installer": "~1.0"
+    },
+    "authors": [
+        {
+            "name": "Phillips Data, Inc.",
+            "homepage": "http://blesta.com/"
+        }
+    ]
+}

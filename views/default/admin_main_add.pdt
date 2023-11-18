@@ -1,0 +1,142 @@
+<?php
+echo ($message ?? null);
+
+$this->Widget->clear();
+$this->Widget->create($this->_('AdminMain.add.boxtitle_addwebhook', true));
+?>
+    <div class="inner">
+        <?php $this->Form->create(null, ['id' => 'webhook', 'class' => 'disable-on-submit']);?>
+        <div class="title_row first">
+            <h3><?php $this->_('AdminMain.add.heading_event');?></h3>
+        </div>
+        <div class="pad">
+            <ul>
+                <li>
+                    <?php
+                    $this->Form->label($this->_('AdminMain.add.field_callback', true), 'callback');
+                    $this->Form->fieldText('callback', ($vars->callback ?? null), ['id' => 'callback']);
+                    ?>
+                    <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminMain.!tooltip.callback');?></div></span>
+                </li>
+                <li>
+                    <?php
+                    $this->Form->label($this->_('AdminMain.add.field_event', true), 'event');
+                    $this->Form->fieldSelect('event', ($events ?? null), ($vars->event ?? null), ['id' => 'event']);
+                    ?>
+                </li>
+                <li>
+                    <?php
+                    $this->Form->label($this->_('AdminMain.add.field_type', true), 'type');
+                    $this->Form->fieldSelect('type', ($types ?? null), ($vars->type ?? null), ['id' => 'type']);
+                    ?>
+                </li>
+                <li>
+                    <?php
+                    $this->Form->label($this->_('AdminMain.add.field_method', true), 'method');
+                    $this->Form->fieldSelect('method', ($methods ?? null), ($vars->method ?? null), ['id' => 'method']);
+                    ?>
+                </li>
+            </ul>
+        </div>
+
+        <div class="title_row">
+            <h3><?php $this->_('AdminMain.add.heading_fields_map');?></h3>
+        </div>
+        <div class="pad">
+            <div class="links_row">
+                <a class="btn btn-default pull-right btn-sm field_row_add" href="#"><span><?php $this->_('AdminMain.add.field_add_field');?></span></a>
+            </div>
+
+            <table class="table fields_table">
+                <tr class="heading_row">
+                    <td><?php $this->_('AdminMain.add.heading_field');?></td>
+                    <td class="last"><?php $this->_('AdminMain.add.heading_parameter');?></td>
+                    <td class="last"><?php $this->_('AdminMain.add.heading_options');?></td>
+                </tr>
+                <?php
+                $i = 0;
+                if (empty($vars->fields)) {
+                    $vars->fields = [['field' => null, 'parameter' => null]];
+                }
+
+                foreach ($vars->fields ?? [] as $field) {
+                    $field = (array) $field;
+                ?>
+                    <tr class="field_row<?php echo (($i++%2 == 1) ? ' odd_row' : '');?>">
+                        <td>
+                            <?php
+                            $this->Form->fieldText('fields[' . $i . '][field]', ($field['field'] ?? null), ['class' => 'stretch']);
+                            ?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldText('fields[' . $i . '][parameter]', ($field['parameter'] ?? null), ['class' => 'stretch']);
+                            ?>
+                        </td>
+                        <td>
+                            <a class="manage field_row_delete" href="#"><span><?php $this->_('AdminMain.add.option_delete');?></span></a>
+                        </td>
+                    </tr>
+                <?php
+                }
+                unset($i);
+                ?>
+            </table>
+        </div>
+
+        <div class="button_row">
+            <?php
+            $this->Form->fieldSubmit('save', $this->_('AdminMain.add.field_addsubmit', true), ['class' => 'btn btn-primary float-right']);
+            ?>
+        </div>
+        <?php $this->Form->end();?>
+    </div>
+<?php $this->Widget->end();?>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.field_row_add').click(function() {
+            addFieldRow();
+            updateZebraStriping('.field_row');
+        });
+
+        $(document).on('click', '.field_row_delete', function() {
+            deleteFieldRow($(this));
+            updateZebraStriping('.field_row');
+        });
+    });
+
+    function addFieldRow() {
+        var field_row = $('table.fields_table tr.field_row').last().clone();
+        field_row.find('input[type=\"text\"]').val('');
+        $('table.fields_table').append(field_row);
+
+        // Set proper indices
+        var row = 0;
+        $('table.fields_table tr.field_row').each(function() {
+            $(this).find('input').each(function() {
+                $(this).prop('name', $(this).prop('name').replace(/(\[\d+\])/, '[' + row + ']'));
+                $(this).prop('name', $(this).prop('name').replace('[]', '[' + row + ']'));
+            });
+
+            row++;
+        });
+    }
+
+    function deleteFieldRow(row)
+    {
+        if ($('.field_row').length > 1) {
+            row.parent().parent().remove();
+        }
+    }
+
+    function updateZebraStriping(row) {
+        var i = 0;
+        $(row).each(function() {
+            if (i++%2 == 1)
+                $(this).addClass('odd_row');
+            else
+                $(this).removeClass('odd_row');
+        });
+    }
+</script>
