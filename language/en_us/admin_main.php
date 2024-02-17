@@ -26,6 +26,9 @@ $lang['AdminMain.index.heading_options'] = 'Options';
 $lang['AdminMain.index.option_edit'] = 'Edit';
 $lang['AdminMain.index.option_delete'] = 'Delete';
 
+$lang['AdminMain.index.text_description_outgoing'] = 'Sends an HTTP request to a URL when an event is triggered. The request can be sent using GET, POST or JSON.';
+$lang['AdminMain.index.text_description_incoming'] = 'Receives an HTTP request and triggers an event on the system using the parameters received in the request. The request can be received using GET, POST or JSON.';
+
 $lang['AdminMain.index.no_results'] = 'There are no webhooks available.';
 
 
@@ -43,6 +46,7 @@ $lang['AdminMain.add.field_type'] = 'Callback';
 $lang['AdminMain.add.field_method'] = 'Method';
 $lang['AdminMain.add.field_add_field'] = 'Add Field';
 $lang['AdminMain.add.field_addsubmit'] = 'Add Webhook';
+$lang['AdminMain.add.text_fields_map'] = 'This section allows you to rename the name of the fields of the event being triggered to a custom name before they are sent to the callback. To see a list of all the fields supported by each one of the events, you can check the following <a href="https://docs.blesta.com/display/dev/Event+Handlers" target="_blank">link</a>.';
 
 
 // Edit webhook
@@ -59,3 +63,4 @@ $lang['AdminMain.edit.field_type'] = 'Callback';
 $lang['AdminMain.edit.field_method'] = 'Method';
 $lang['AdminMain.edit.field_add_field'] = 'Add Field';
 $lang['AdminMain.edit.field_editsubmit'] = 'Edit Webhook';
+$lang['AdminMain.edit.text_fields_map'] = 'This section allows you to rename the name of the fields of the event being triggered to a custom name before they are sent to the callback. To see a list of all the fields supported by each one of the events, you can check the following <a href="https://docs.blesta.com/display/dev/Event+Handlers" target="_blank">link</a>.';

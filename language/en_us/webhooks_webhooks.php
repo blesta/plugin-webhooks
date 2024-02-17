@@ -1,6 +1,7 @@
 <?php
 
 $lang['WebhooksWebhooks.!error.company_id.exists'] = 'The provided company does not exists.';
+$lang['WebhooksWebhooks.!error.callback.exists'] = 'A webhook of this type already exists with this callback.';
 $lang['WebhooksWebhooks.!error.callback.empty'] = 'Please enter a valid callback.';
 $lang['WebhooksWebhooks.!error.callback.length'] = 'The callback can not exceed 255 characters.';
 $lang['WebhooksWebhooks.!error.event.exists'] = 'The provided event does not exists.';

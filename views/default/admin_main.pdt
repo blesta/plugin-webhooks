@@ -2,8 +2,8 @@
         echo ($message ?? null);
 
         $links = [
-            ['name' => $this->_('AdminMain.index.category_incoming', true) . ' <span>(' . (isset($type_count['incoming']) ? $this->Html->safe($type_count['incoming']) : null) . ')</span>', 'current' => ((isset($type) ? $type : null) == 'incoming' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/webhooks/admin_main/index/incoming/', 'class' => 'ajax']],
             ['name' => $this->_('AdminMain.index.category_outgoing', true) . ' <span>(' . (isset($type_count['outgoing']) ? $this->Html->safe($type_count['outgoing']) : null) . ')</span>', 'current' => ((isset($type) ? $type : null) == 'outgoing' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/webhooks/admin_main/index/outgoing/', 'class' => 'ajax']],
+            ['name' => $this->_('AdminMain.index.category_incoming', true) . ' <span>(' . (isset($type_count['incoming']) ? $this->Html->safe($type_count['incoming']) : null) . ')</span>', 'current' => ((isset($type) ? $type : null) == 'incoming' ? true : false), 'attributes' => ['href' => $this->base_uri . 'plugin/webhooks/admin_main/index/incoming/', 'class' => 'ajax']]
         ];
         $link_buttons = [
             [
@@ -23,6 +23,7 @@
 
         if (($webhooks ?? false) && ($num_tickets = count($webhooks)) > 0) {
         ?>
+        <p class="p-2 rounded bg-light text-dark"><?php $this->_('AdminMain.index.text_description_' . ($type ?? 'outgoing'));?></p>
         <table class="table" id="webhook_list">
             <tr class="heading_row">
                 <td><?php $this->_('AdminMain.index.heading_callback');?></td>

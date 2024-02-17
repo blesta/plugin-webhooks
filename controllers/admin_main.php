@@ -35,7 +35,7 @@ class AdminMain extends WebhooksController
      */
     public function index()
     {
-        $type = (isset($this->get[0]) ? $this->get[0] : 'incoming');
+        $type = (isset($this->get[0]) ? $this->get[0] : 'outgoing');
         $page = (isset($this->get[1]) ? (int)$this->get[1] : 1);
         $sort = (isset($this->get['sort']) ? $this->get['sort'] : 'method');
         $order = (isset($this->get['order']) ? $this->get['order'] : 'desc');
@@ -47,8 +47,8 @@ class AdminMain extends WebhooksController
 
         // Set the number of webhooks of each type
         $type_count = [
-            'incoming' => $this->WebhooksWebhooks->getTypeCount('incoming'),
-            'outgoing' => $this->WebhooksWebhooks->getTypeCount('outgoing')
+            'outgoing' => $this->WebhooksWebhooks->getTypeCount('outgoing'),
+            'incoming' => $this->WebhooksWebhooks->getTypeCount('incoming')
         ];
 
         // Get webhooks
