@@ -58,6 +58,23 @@ class WebhooksWebhooks extends WebhooksModel
             }
         }
 
+        // Register event for this webhook
+        if ($vars['type'] = 'outgoing') {
+            Loader::loadModels($this, ['PluginManager']);
+
+            $plugin = $this->PluginManager->getByDir('webhooks', $vars['company_id']);
+            $plugin = reset($plugin);
+
+            try {
+                $this->PluginManager->addEvent($plugin->id, [
+                    'event' => $vars['event'],
+                    'callback' => ['this', 'listen']
+                ]);
+            } catch (Throwable $e) {
+                // Nothing to do
+            }
+        }
+
         return $webhook_id;
     }
 
@@ -103,6 +120,23 @@ class WebhooksWebhooks extends WebhooksModel
             }
         }
 
+        // Register event for this webhook
+        if ($vars['type'] = 'outgoing') {
+            Loader::loadModels($this, ['PluginManager']);
+
+            $plugin = $this->PluginManager->getByDir('webhooks', $vars['company_id']);
+            $plugin = reset($plugin);
+
+            try {
+                $this->PluginManager->addEvent($plugin->id, [
+                    'event' => $vars['event'],
+                    'callback' => ['this', 'listen']
+                ]);
+            } catch (Throwable $e) {
+                // Nothing to do
+            }
+        }
+
         return $webhook_id;
     }
 
@@ -137,6 +171,23 @@ class WebhooksWebhooks extends WebhooksModel
                 ]
             ],
             'callback' => [
+                'exists' => [
+                    'rule' => [
+                        function ($callback, $type) use ($vars) {
+                            $webhook = $this->Record->select()
+                                ->from('webhooks')
+                                ->where('company_id', '=', $vars['company_id'] ?? null)
+                                ->where('callback', '=', $callback)
+                                ->where('type', '=', $type)
+                                ->fetchAll();
+
+                            return count($webhook) > 0;
+                        },
+                        ['_linked' => 'type'],
+                    ],
+                    'negate' => true,
+                    'message' => $this->_('WebhooksWebhooks.!error.callback.exists')
+                ],
                 'empty' => [
                     'rule' => 'isEmpty',
                     'negate' => true,
@@ -149,7 +200,7 @@ class WebhooksWebhooks extends WebhooksModel
             ],
             'event' => [
                 'exists' => [
-                    'rule' => [[$this, 'validateExists'], 'event', 'plugin_events'],
+                    'rule' => ['in_array', array_keys($this->getEvents())],
                     'message' => $this->_('WebhooksWebhooks.!error.event.exists')
                 ]
             ],
@@ -224,6 +275,18 @@ class WebhooksWebhooks extends WebhooksModel
     }
 
     /**
+     * Returns a list of all available events
+     *
+     * @return array A list of webhook types
+     */
+    public function getEvents()
+    {
+        Loader::loadModels($this, ['Webhooks.WebhooksEvents']);
+
+        return $this->WebhooksEvents->getAll();
+    }
+
+    /**
      * Returns a list of all available webhook types
      *
      * @return array A list of webhook types
@@ -231,8 +294,8 @@ class WebhooksWebhooks extends WebhooksModel
     public function getTypes()
     {
         return [
-            'incoming' => $this->_('WebhooksWebhooks.getTypes.type_incoming'),
-            'outgoing' => $this->_('WebhooksWebhooks.getTypes.type_outgoing')
+            'outgoing' => $this->_('WebhooksWebhooks.getTypes.type_outgoing'),
+            'incoming' => $this->_('WebhooksWebhooks.getTypes.type_incoming')
         ];
     }
 

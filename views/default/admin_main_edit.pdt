@@ -43,6 +43,8 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true));
             <h3><?php $this->_('AdminMain.edit.heading_fields_map');?></h3>
         </div>
         <div class="pad">
+            <p><?php $this->_('AdminMain.edit.text_fields_map');?></p>
+
             <div class="links_row">
                 <a class="btn btn-default pull-right btn-sm field_row_add" href="#"><span><?php $this->_('AdminMain.edit.field_add_field');?></span></a>
             </div>
