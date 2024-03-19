@@ -88,6 +88,44 @@ class WebhooksPlugin extends Plugin
     }
 
     /**
+     * Performs migration of data from $current_version (the current installed version)
+     * to the given file set version
+     *
+     * @param string $current_version The current installed version of this plugin
+     * @param int $plugin_id The ID of the plugin being upgraded
+     */
+    public function upgrade($current_version, $plugin_id)
+    {
+        // Upgrade if possible
+        if (version_compare($this->getVersion(), $current_version, '>')) {
+            // Handle the upgrade, set errors using $this->Input->setErrors() if any errors encountered
+
+            // Upgrade to 1.1.0
+            if (version_compare($current_version, '1.1.0', '<')) {
+                $this->upgrade1_1_0();
+            }
+        }
+    }
+
+    /**
+     * Update to v1.1.0
+     */
+    private function upgrade1_1_0()
+    {
+        $this->Record->query(
+            "ALTER TABLE `webhooks` CHANGE `method` `method` ENUM('get','post','put','put_json','post_json','json') CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL;"
+        );
+
+        $vars = ['method' => 'post_json'];
+        $this->Record->where('method', '=', 'json')->
+            update('webhooks', $vars, array_keys($vars));
+
+        $this->Record->query(
+            "ALTER TABLE `webhooks` CHANGE `method` `method` ENUM('get','post','put','put_json','post_json') CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL;"
+        );
+    }
+
+    /**
      * Returns all events to be registered for this plugin (invoked after install() or upgrade(),
      * overwrites all existing events)
      *

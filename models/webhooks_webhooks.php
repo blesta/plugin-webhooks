@@ -174,6 +174,12 @@ class WebhooksWebhooks extends WebhooksModel
                 'exists' => [
                     'rule' => [
                         function ($callback, $type) use ($vars) {
+                            // Return false if it is an outgoing webhook
+                            if ($vars['type'] == 'outgoing') {
+                                return false;
+                            }
+
+                            // Check if another webhook exists with this callback
                             $webhook = $this->Record->select()
                                 ->from('webhooks')
                                 ->where('company_id', '=', $vars['company_id'] ?? null)
@@ -309,7 +315,9 @@ class WebhooksWebhooks extends WebhooksModel
         return [
             'get' => $this->_('WebhooksWebhooks.getMethods.get'),
             'post' => $this->_('WebhooksWebhooks.getMethods.post'),
-            'json' => $this->_('WebhooksWebhooks.getMethods.json')
+            'put' => $this->_('WebhooksWebhooks.getMethods.put'),
+            'post_json' => $this->_('WebhooksWebhooks.getMethods.post_json'),
+            'put_json' => $this->_('WebhooksWebhooks.getMethods.put_json')
         ];
     }
 
