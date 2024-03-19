@@ -260,7 +260,6 @@ class WebhooksEvents extends WebhooksModel
 
                     // Set request fields
                     $fields = $this->getFields($webhook->id, (array) $event->getParams());
-                    print_r($fields); exit;
 
                     if ($webhook->method == 'get') {
                         $webhook->callback .= empty($fields) ? '' : '?' . http_build_query($fields);
