@@ -273,7 +273,7 @@ class WebhooksEvents extends WebhooksModel
                         curl_setopt($request, CURLOPT_POST, true);
                     }
 
-                    if ($webhook->method == 'post') {
+                    if ($webhook->method == 'post' || $webhook->method == 'put') {
                         curl_setopt($request, CURLOPT_POSTFIELDS, http_build_query($fields));
                     } else if ($webhook->method == 'post_json' || $webhook->method == 'put_json') {
                         curl_setopt($request, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
