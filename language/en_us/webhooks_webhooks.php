@@ -17,4 +17,6 @@ $lang['WebhooksWebhooks.getTypes.type_outgoing'] = 'Outgoing';
 
 $lang['WebhooksWebhooks.getMethods.get'] = 'GET';
 $lang['WebhooksWebhooks.getMethods.post'] = 'POST';
-$lang['WebhooksWebhooks.getMethods.json'] = 'JSON';
+$lang['WebhooksWebhooks.getMethods.put'] = 'PUT';
+$lang['WebhooksWebhooks.getMethods.post_json'] = 'POST JSON';
+$lang['WebhooksWebhooks.getMethods.put_json'] = 'PUT JSON';

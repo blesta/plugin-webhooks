@@ -266,17 +266,28 @@ class WebhooksEvents extends WebhooksModel
                     }
 
                     curl_setopt($request, CURLOPT_URL, $webhook->callback);
-                    curl_setopt($request, CURLOPT_POST, ($webhook->method == 'post' || $webhook->method == 'json'));
                     curl_setopt($request, CURLOPT_RETURNTRANSFER, true);
 
                     // Set POST fields
+                    if ($webhook->method == 'post' || $webhook->method == 'post_json') {
+                        curl_setopt($request, CURLOPT_POST, true);
+                    }
+
                     if ($webhook->method == 'post') {
                         curl_setopt($request, CURLOPT_POSTFIELDS, http_build_query($fields));
-                    } else if ($webhook->method == 'json') {
+                    } else if ($webhook->method == 'post_json' || $webhook->method == 'put_json') {
                         curl_setopt($request, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
                         curl_setopt($request, CURLOPT_POSTFIELDS, json_encode($fields));
                     }
-                    curl_setopt($request, CURLOPT_CUSTOMREQUEST, ($webhook->method == 'get' ? 'GET' : 'POST'));
+
+                    if ($webhook->method == 'post_json') {
+                        $webhook->method = 'post';
+                    }
+                    if ($webhook->method == 'put_json') {
+                        $webhook->method = 'put';
+                    }
+
+                    curl_setopt($request, CURLOPT_CUSTOMREQUEST, strtoupper($webhook->method));
 
                     // Set SSL verification
                     if (Configure::get('Blesta.curl_verify_ssl')) {

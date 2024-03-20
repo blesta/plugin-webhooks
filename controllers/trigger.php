@@ -43,7 +43,13 @@ class Trigger extends AppController
             case 'post':
                 $params = $this->post;
                 break;
+            case 'put':
+                $params = [];
+                parse_str(file_get_contents('php://input'), $params);
+                break;
             case 'json':
+            case 'post_json':
+            case 'put_json':
                 $post = file_get_contents('php://input');
                 $params = json_decode($post);
 

@@ -26,7 +26,7 @@ $lang['AdminMain.index.heading_options'] = 'Options';
 $lang['AdminMain.index.option_edit'] = 'Edit';
 $lang['AdminMain.index.option_delete'] = 'Delete';
 
-$lang['AdminMain.index.text_description_outgoing'] = 'Sends an HTTP request to a URL when an event is triggered. The request can be sent using GET, POST or JSON.';
+$lang['AdminMain.index.text_description_outgoing'] = 'Sends an HTTP request to a URL when an event is triggered. The request can be sent using GET, POST, PUT or JSON.';
 $lang['AdminMain.index.text_description_incoming'] = 'Receives an HTTP request and triggers an event on the system using the parameters received in the request. The request can be received using GET, POST or JSON.';
 
 $lang['AdminMain.index.no_results'] = 'There are no webhooks available.';
