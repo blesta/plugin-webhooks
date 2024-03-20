@@ -260,6 +260,7 @@ class WebhooksEvents extends WebhooksModel
 
                     // Set request fields
                     $fields = $this->getFields($webhook->id, (array) $event->getParams());
+
                     if ($webhook->method == 'get') {
                         $webhook->callback .= empty($fields) ? '' : '?' . http_build_query($fields);
                     }
@@ -273,7 +274,7 @@ class WebhooksEvents extends WebhooksModel
                     }
 
                     if ($webhook->method == 'post') {
-                        curl_setopt($request, CURLOPT_POSTFIELDS, $fields);
+                        curl_setopt($request, CURLOPT_POSTFIELDS, http_build_query($fields));
                     } else if ($webhook->method == 'post_json' || $webhook->method == 'put_json') {
                         curl_setopt($request, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
                         curl_setopt($request, CURLOPT_POSTFIELDS, json_encode($fields));
@@ -333,14 +334,14 @@ class WebhooksEvents extends WebhooksModel
         );
 
         // Map fields
-        $data = $this->Array->flatten($data);
+        $data = $this->Array->flatten($data, '.', '');
         foreach ($data as $key => $value) {
             if (array_key_exists($key, $map)) {
                 $data[$map[$key]] = $value;
                 unset($data[$key]);
             }
         }
-        $data = $this->Array->unflatten($data);
+        $data = $this->Array->unflatten($data, '.', '');
 
         return $data;
     }

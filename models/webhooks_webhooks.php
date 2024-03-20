@@ -102,6 +102,10 @@ class WebhooksWebhooks extends WebhooksModel
             return;
         }
 
+        if (!isset($vars['company_id'])) {
+            $vars['company_id'] = Configure::get('Blesta.company_id');
+        }
+
         // Update the webhook
         $fields = [
             'company_id', 'callback', 'event', 'type', 'method'
