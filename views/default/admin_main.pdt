@@ -73,10 +73,9 @@
         $this->Widget->end();
         ?>
 
-<?php
-$this->Javascript->setInline("
-$(document).ready(function() {
-    // Handle confirmation
-    $('#webhook_list a.manage[rel]').blestaModalConfirm({base_url: '" . $this->base_uri . "', close: '" . $this->_('AppController.modal.text_close', true) . "', submit: true});
-});
-");
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Handle confirmation
+        $('#admin_main a.manage[rel]').blestaModalConfirm({base_url: '<?php echo (isset($this->base_uri) ? $this->Html->safe($this->base_uri) : null);?>', close: '<?php $this->_('AppController.modal.text_close');?>', submit: true});
+    });
+</script>
