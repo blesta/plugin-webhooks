@@ -46,9 +46,8 @@ class WebhooksPlugin extends Plugin
                 setField('callback', ['type' => 'varchar', 'size' => 255])->
                 setField('event', ['type' => 'varchar', 'size' => 255])->
                 setField('type', ['type' => 'enum', 'size' => "'incoming','outgoing'", 'default' => 'incoming'])->
-                setField('method', ['type' => 'enum', 'size' => "'get','post','json'", 'default' => 'post'])->
+                setField('method', ['type' => 'enum', 'size' => "'get','post','put','put_json','post_json'", 'default' => 'post'])->
                 setKey(['id'], 'primary')->
-                setKey(['company_id', 'callback', 'type'], 'unique')->
                 create('webhooks', true);
 
             // webhook_fields
@@ -123,6 +122,9 @@ class WebhooksPlugin extends Plugin
         $this->Record->query(
             "ALTER TABLE `webhooks` CHANGE `method` `method` ENUM('get','post','put','put_json','post_json') CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL;"
         );
+
+        // Drop the index on 'company_id'
+        $this->Record->query('DROP INDEX `company_id` ON `webhooks`');
     }
 
     /**
