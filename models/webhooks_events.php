@@ -191,43 +191,47 @@ class WebhooksEvents extends WebhooksModel
         Loader::loadModels($this, ['Webhooks.WebhooksWebhooks']);
         $webhook = $this->WebhooksWebhooks->get($webhook_id);
 
-        // Check the provided event is valid
+        // Fetch all supported events
         $events = $this->getAll();
-        if (!in_array($webhook->event, $events)) {
-            return [];
-        }
 
-        // Format parameters
-        $params = $this->getFields($webhook->id, $params);
-        $event = $webhook->event;
-
-        // Get the observer of the event
-        $observers = $this->getObservers();
-        $callback = explode('.', $event);
-        $observer = $observers[$callback[0]];
-
-        // Register event
-        $eventFactory = new EventFactory();
-        $eventListener = $eventFactory->listener();
-        $eventListener->register($event, [$observer['class'], $callback[1]], $observer['file']);
-
-        // Trigger event
-        $event = $eventListener->trigger($eventFactory->event($event, $params));
-
-        // Get the event return value
-        $returnValue = $event->getReturnValue();
-
-        // Put return in a special index
+        // Process webhook events
         $return = [];
-        if (!empty($returnValue)) {
-            $return['__return__'] = $returnValue;
-        }
+        foreach ($webhook->events as $event) {
+            // Check the provided event is valid
+            if (!in_array($event, $events)) {
+                continue;
+            }
 
-        // Any return values that match the submitted params should be put in their own index to support extract() calls
-        if (is_array($returnValue)) {
-            foreach ($returnValue as $key => $data) {
-                if (array_key_exists($key, $params)) {
-                    $return[$key] = $data;
+            // Format parameters
+            $params = $this->getFields($webhook->id, $params);
+
+            // Get the observer of the event
+            $observers = $this->getObservers();
+            $callback = explode('.', $event);
+            $observer = $observers[$callback[0]];
+
+            // Register event
+            $eventFactory = new EventFactory();
+            $eventListener = $eventFactory->listener();
+            $eventListener->register($event, [$observer['class'], $callback[1]], $observer['file']);
+
+            // Trigger event
+            $response = $eventListener->trigger($eventFactory->event($event, $params));
+
+            // Get the event return value
+            $returnValue = $response->getReturnValue();
+
+            // Put return in a special index
+            if (!empty($returnValue)) {
+                $return[$event]['__return__'] = $returnValue;
+            }
+
+            // Any return values that match the submitted params should be put in their own index to support extract() calls
+            if (is_array($returnValue)) {
+                foreach ($returnValue as $key => $data) {
+                    if (array_key_exists($key, $params)) {
+                        $return[$event][$key] = $data;
+                    }
                 }
             }
         }
@@ -245,9 +249,10 @@ class WebhooksEvents extends WebhooksModel
         try {
             // Get the outgoing webhook for this event
             $webhooks = $this->Record->select()->from('webhooks')
-                ->where('company_id', '=', Configure::get('Blesta.company_id'))
-                ->where('event', '=', $event->getName())
-                ->where('type', '=', 'outgoing')
+                ->innerJoin('webhook_events', 'webhook_events.webhook_id', '=', 'webhooks.id', false)
+                ->where('webhooks.company_id', '=', Configure::get('Blesta.company_id'))
+                ->where('webhooks.type', '=', 'outgoing')
+                ->where('webhook_events.event', '=', $event->getName())
                 ->fetchAll();
 
             if ($webhooks) {

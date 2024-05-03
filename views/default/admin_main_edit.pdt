@@ -21,8 +21,24 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true));
                 <li>
                     <?php
                     $this->Form->label($this->_('AdminMain.edit.field_event', true), 'event');
-                    $this->Form->fieldSelect('event', ($events ?? null), ($vars->event ?? null), ['id' => 'event']);
                     ?>
+
+                    <div class="row">
+                        <?php
+                        foreach ($events ?? [] as $event => $name) {
+                        ?>
+                            <div class="col-md-3">
+                                <div class="p-1">
+                                    <?php
+                                    $this->Form->fieldCheckbox('events[]', $event, in_array($event, $vars->events ?? []), ['id' => 'events_' . $event]);
+                                    $this->Form->label($name, 'events_' . $event, ['class' => 'inline']);
+                                    ?>
+                                </div>
+                            </div>
+                        <?php
+                        }
+                        ?>
+                    </div>
                 </li>
                 <li>
                     <?php
