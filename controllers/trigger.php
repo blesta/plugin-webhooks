@@ -51,7 +51,7 @@ class Trigger extends AppController
             case 'post_json':
             case 'put_json':
                 $post = file_get_contents('php://input');
-                $params = json_decode($post);
+                $params = (array) json_decode($post, true);
 
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $params = $this->post;
