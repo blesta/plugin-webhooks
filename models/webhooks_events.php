@@ -39,6 +39,8 @@ class WebhooksEvents extends WebhooksModel
     {
         parent::__construct();
 
+        Loader::loadModels($this, ['PluginManager']);
+
         $cache = Cache::fetchCache(
             'event_observers',
             Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
@@ -57,6 +59,11 @@ class WebhooksEvents extends WebhooksModel
     {
         // Check if the current instance of the class, has the observers stored in memory
         if (!empty($this->observers) && is_array($this->observers)) {
+            Cache::clearCache(
+                'event_observers',
+                Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
+            );
+
             return $this->observers;
         }
 
@@ -70,6 +77,22 @@ class WebhooksEvents extends WebhooksModel
             foreach ($files as $file) {
                 if ($file->getExtension() == 'php' && $file->isFile()){
                     try {
+                        // If the observer belongs to a Plugin, check if the plugin
+                        // is installed for the current company
+                        if (str_contains($observer_dir, PLUGINDIR)) {
+                            if (!str_contains($file->getFilename(), '_observer')) {
+                                continue;
+                            }
+
+                            $plugin_file = str_replace(PLUGINDIR, '', $file->getRealPath());
+                            $plugin = explode(DS, $plugin_file);
+                            $plugin = $plugin[0] ?? null;
+
+                            if (!$this->PluginManager->isInstalled($plugin, Configure::get('Blesta.company_id'))) {
+                                continue;
+                            }
+                        }
+
                         @include_once $file->getRealPath();
                     } catch (Throwable $e) {
                         // Nothing to do
@@ -187,6 +210,11 @@ class WebhooksEvents extends WebhooksModel
      */
     public function trigger(int $webhook_id, array $params = [])
     {
+        Cache::clearCache(
+            'event_observers',
+            Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
+        );
+
         // Get webhook
         Loader::loadModels($this, ['Webhooks.WebhooksWebhooks']);
         $webhook = $this->WebhooksWebhooks->get($webhook_id);
