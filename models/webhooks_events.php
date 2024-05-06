@@ -90,7 +90,7 @@ class WebhooksEvents extends WebhooksModel
                 $observers[$event] = [
                     'event' => $event,
                     'methods' => $this->getMethods(new $class()),
-                    'file' => $file->getRealPath(),
+                    'file' => (new ReflectionClass($class))->getFileName(),
                     'class' => $class
                 ];
             }
