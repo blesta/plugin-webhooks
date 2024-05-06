@@ -14,9 +14,14 @@ $this->Widget->create($this->_('AdminMain.add.boxtitle_addwebhook', true));
                 <li>
                     <?php
                     $this->Form->label($this->_('AdminMain.add.field_callback', true), 'callback');
-                    $this->Form->fieldText('callback', ($vars->callback ?? null), ['id' => 'callback']);
                     ?>
-                    <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminMain.!tooltip.callback');?></div></span>
+                    <div>
+                        <?php
+                        $this->Form->label($this->Html->safe('http://' . Configure::get('Blesta.company')->hostname . $this->base_uri . 'plugin/webhooks/trigger/index/'), null, ['class' => 'inline callback_url']);
+                        $this->Form->fieldText('callback', ($vars->callback ?? null), ['id' => 'callback', 'class' => 'inline']);
+                        ?>
+                        <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminMain.!tooltip.callback');?></div></span>
+                    </div>
                 </li>
                 <li>
                     <?php
@@ -105,6 +110,20 @@ $this->Widget->create($this->_('AdminMain.add.boxtitle_addwebhook', true));
         $(document).on('click', '.field_row_delete', function() {
             deleteFieldRow($(this));
             updateZebraStriping('.field_row');
+        });
+
+        if ($('#type').val() == 'incoming') {
+            $('.callback_url').show();
+        } else {
+            $('.callback_url').hide();
+        }
+
+        $('#type').change(function() {
+            if ($(this).val() == 'incoming') {
+                $('.callback_url').show();
+            } else {
+                $('.callback_url').hide();
+            }
         });
     });
 
