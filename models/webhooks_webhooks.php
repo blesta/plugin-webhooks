@@ -468,11 +468,23 @@ class WebhooksWebhooks extends WebhooksModel
         $type = 'incoming',
         $order_by = ['method' => 'DESC']
     ) {
-        return $this->Record->select()->from('webhooks')
+        $webhooks = $this->Record->select()->from('webhooks')
             ->where('company_id', '=', Configure::get('Blesta.company_id'))
             ->where('type', '=', $type)
             ->order($order_by)
             ->fetchAll();
+
+        foreach ($webhooks as &$webhook) {
+            $webhook->events = $this->Form->collapseObjectArray(
+                $this->Record->select('webhook_events.event')
+                    ->from('webhook_events')
+                    ->where('webhook_id', '=', $webhook->id)
+                    ->fetchAll(),
+                'event'
+            );
+        }
+
+        return $webhooks;
     }
 
     /**
@@ -491,11 +503,23 @@ class WebhooksWebhooks extends WebhooksModel
         $page = 1,
         $order_by = ['method' => 'DESC']
     ) {
-        return $this->Record->select()->from('webhooks')
+        $webhooks = $this->Record->select()->from('webhooks')
             ->where('company_id', '=', Configure::get('Blesta.company_id'))
             ->where('type', '=', $type)
             ->order($order_by)
             ->limit($this->getPerPage(), (max(1, $page) - 1) * $this->getPerPage())
             ->fetchAll();
+
+        foreach ($webhooks as &$webhook) {
+            $webhook->events = $this->Form->collapseObjectArray(
+                $this->Record->select('webhook_events.event')
+                    ->from('webhook_events')
+                    ->where('webhook_id', '=', $webhook->id)
+                    ->fetchAll(),
+                'event'
+            );
+        }
+
+        return $webhooks;
     }
 }
