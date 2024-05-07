@@ -90,6 +90,7 @@ $this->Widget->create($this->_('AdminMain.add.boxtitle_addwebhook', true));
             <?php
             $this->Form->fieldSubmit('save', $this->_('AdminMain.add.field_addsubmit', true), ['class' => 'btn btn-primary float-right']);
             ?>
+            <a class="btn btn-default float-right" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/');?>"><?php $this->_('AdminMain.add.field_cancel');?></a>
         </div>
         <?php $this->Form->end();?>
     </div>
