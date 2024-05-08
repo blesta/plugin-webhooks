@@ -46,6 +46,7 @@ $lang['AdminMain.add.field_type'] = 'Callback';
 $lang['AdminMain.add.field_method'] = 'Method';
 $lang['AdminMain.add.field_add_field'] = 'Add Field';
 $lang['AdminMain.add.field_addsubmit'] = 'Add Webhook';
+$lang['AdminMain.add.field_cancel'] = 'Cancel';
 $lang['AdminMain.add.text_fields_map'] = 'This section allows you to rename the name of the fields of the event being triggered to a custom name before they are sent to the callback. Subfields should be separated by a period (e.g. vars.status). To see a list of all the fields supported by each one of the events, you can check the following <a href="https://docs.blesta.com/display/dev/Event+Handlers" target="_blank">link</a>.';
 
 
@@ -63,4 +64,5 @@ $lang['AdminMain.edit.field_type'] = 'Callback';
 $lang['AdminMain.edit.field_method'] = 'Method';
 $lang['AdminMain.edit.field_add_field'] = 'Add Field';
 $lang['AdminMain.edit.field_editsubmit'] = 'Edit Webhook';
+$lang['AdminMain.edit.field_cancel'] = 'Cancel';
 $lang['AdminMain.edit.text_fields_map'] = 'This section allows you to rename the name of the fields of the event being triggered to a custom name before they are sent to the callback. Subfields should be separated by a period (e.g. vars.status). To see a list of all the fields supported by each one of the events, you can check the following <a href="https://docs.blesta.com/display/dev/Event+Handlers" target="_blank">link</a>.';
