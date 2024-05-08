@@ -50,6 +50,13 @@ class WebhooksPlugin extends Plugin
                 setKey(['id'], 'primary')->
                 create('webhooks', true);
 
+            // webhook_events
+            $this->Record->
+                setField('webhook_id', ['type' => 'int', 'size' => 10, 'unsigned' => true])->
+                setField('event', ['type' => 'varchar', 'size' => 255])->
+                setKey(['webhook_id', 'field'], 'primary')->
+                create('webhook_events', true);
+
             // webhook_fields
             $this->Record->
                 setField('webhook_id', ['type' => 'int', 'size' => 10, 'unsigned' => true])->
@@ -103,6 +110,11 @@ class WebhooksPlugin extends Plugin
             if (version_compare($current_version, '1.1.0', '<')) {
                 $this->upgrade1_1_0();
             }
+
+            // Upgrade to 1.2.0
+            if (version_compare($current_version, '1.2.0', '<')) {
+                $this->upgrade1_2_0();
+            }
         }
     }
 
@@ -125,6 +137,34 @@ class WebhooksPlugin extends Plugin
 
         // Drop the index on 'company_id'
         $this->Record->query('DROP INDEX `company_id` ON `webhooks`');
+    }
+
+    /**
+     * Update to v1.2.0
+     */
+    private function upgrade1_2_0()
+    {
+        // Add new webhook_events table
+        try {
+            $this->Record->
+                setField('webhook_id', ['type' => 'int', 'size' => 10, 'unsigned' => true])->
+                setField('event', ['type' => 'varchar', 'size' => 255])->
+                setKey(['webhook_id', 'event'], 'primary')->
+                create('webhook_events', true);
+        } catch (Exception $e) {
+            // Error adding... no permission?
+            $this->Input->setErrors(['db'=> ['create'=>$e->getMessage()]]);
+        }
+
+        // Move events to the new table
+        $webhooks = $this->Record->select()->from('webhooks')
+            ->fetchAll();
+        foreach ($webhooks as $webhook) {
+            $this->Record->insert('webhook_events', ['webhook_id' => $webhook->id, 'event' => $webhook->event]);
+        }
+
+        // Remove webhooks.callback column
+        $this->Record->query('ALTER TABLE `webhooks` DROP COLUMN `event`;');
     }
 
     /**

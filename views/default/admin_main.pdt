@@ -46,7 +46,15 @@
                     }
                     ?>
                 </td>
-                <td><?php echo $this->Html->safe($webhook->event ?? '');?></td>
+                <td>
+                    <?php
+                    foreach ($webhook->events ?? [] as $event) {
+                    ?>
+                        <div class="badge badge-light"><?php echo $this->Html->safe($event);?></div>
+                    <?php
+                    }
+                    ?>
+                </td>
                 <td><?php echo $this->Html->safe(strtoupper($webhook->method ?? ''));?></td>
                 <td class="last">
                     <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/edit/' . $webhook->id);?>"><?php $this->_('AdminMain.index.option_edit');?></a>,

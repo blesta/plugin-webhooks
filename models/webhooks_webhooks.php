@@ -45,16 +45,21 @@ class WebhooksWebhooks extends WebhooksModel
 
         // Add the webhook
         $fields = [
-            'company_id', 'callback', 'event', 'type', 'method'
+            'company_id', 'callback', 'type', 'method'
         ];
         $this->Record->insert('webhooks', $vars, $fields);
         $webhook_id = $this->Record->lastInsertId();
+
+        // Add webhook events
+        foreach ($vars['events'] ?? [] as $event) {
+            $this->Record->insert('webhook_events', compact('webhook_id', 'event'), ['webhook_id', 'event']);
+        }
 
         // Add webhook fields
         if (isset($vars['fields']) && is_array($vars['fields'])) {
             foreach ($vars['fields'] as $field) {
                 $field['webhook_id'] = $webhook_id;
-                $this->Record->insert('webhook_fields', $field, ['webhook_id', 'field', 'parameter']);
+                $this->Record->insert('webhook_events', $field, ['webhook_id', 'field', 'parameter']);
             }
         }
 
@@ -108,9 +113,18 @@ class WebhooksWebhooks extends WebhooksModel
 
         // Update the webhook
         $fields = [
-            'company_id', 'callback', 'event', 'type', 'method'
+            'company_id', 'callback', 'type', 'method'
         ];
         $this->Record->where('webhooks.id', '=', $webhook_id)->update('webhooks', $vars, $fields);
+
+        // Remove the existing webhook events and add the new ones
+        $this->Record->from('webhook_events')
+            ->where('webhook_events.webhook_id', '=', $webhook_id)
+            ->delete();
+
+        foreach ($vars['events'] ?? [] as $event) {
+            $this->Record->insert('webhook_events', compact('webhook_id', 'event'), ['webhook_id', 'event']);
+        }
 
         // Remove the existing webhook fields and add the new ones
         $this->Record->from('webhook_fields')
@@ -154,8 +168,9 @@ class WebhooksWebhooks extends WebhooksModel
         // Delete the webhook
         return $this->Record->from('webhooks')
             ->leftJoin('webhook_fields', 'webhook_fields.webhook_id', '=', 'webhooks.id', false)
+            ->leftJoin('webhook_events', 'webhook_events.webhook_id', '=', 'webhooks.id', false)
             ->where('webhooks.id', '=', $webhook_id)
-            ->delete(['webhooks.*', 'webhook_fields.*']);
+            ->delete(['webhooks.*', 'webhook_fields.*', 'webhook_events.*']);
     }
 
     /**
@@ -208,10 +223,10 @@ class WebhooksWebhooks extends WebhooksModel
                     'message' => $this->_('WebhooksWebhooks.!error.callback.length')
                 ]
             ],
-            'event' => [
+            'events[]' => [
                 'exists' => [
                     'rule' => ['in_array', array_keys($this->getEvents())],
-                    'message' => $this->_('WebhooksWebhooks.!error.event.exists')
+                    'message' => $this->_('WebhooksWebhooks.!error.events[].exists')
                 ]
             ],
             'type' => [
@@ -338,6 +353,14 @@ class WebhooksWebhooks extends WebhooksModel
             ->fetch();
 
         if ($webhook) {
+            $webhook->events = $this->Form->collapseObjectArray(
+                $this->Record->select('webhook_events.event')
+                    ->from('webhook_events')
+                    ->where('webhook_id', '=', $webhook_id)
+                    ->fetchAll(),
+                'event'
+            );
+
             $webhook->fields = $this->Record->select(['webhook_fields.field', 'webhook_fields.parameter'])
                 ->from('webhook_fields')
                 ->where('webhook_id', '=', $webhook_id)
@@ -363,6 +386,48 @@ class WebhooksWebhooks extends WebhooksModel
             ->fetch();
 
         if ($webhook) {
+            $webhook->events = $this->Form->collapseObjectArray(
+                $this->Record->select('webhook_events.event')
+                    ->from('webhook_events')
+                    ->where('webhook_id', '=', $webhook->id)
+                    ->fetchAll(),
+                'event'
+            );
+
+            $webhook->fields = $this->Record->select(['webhook_fields.field', 'webhook_fields.parameter'])
+                ->from('webhook_fields')
+                ->where('webhook_id', '=', $webhook->id)
+                ->fetchAll();
+        }
+
+        return $webhook;
+    }
+
+    /**
+     * Fetches a single webhook by the event and type
+     *
+     * @param string $event The event of the webhook
+     * @param string $type The type of webhook (optional)
+     * @return array An array of stdClass objects representing webhooks
+     */
+    public function getByEvent(?string $event, string $type = 'incoming')
+    {
+        $webhook = $this->Record->select()->from('webhooks')
+            ->innerJoin('webhook_events', 'webhook_events.webhook_id', '=', 'webhooks.id', false)
+            ->where('webhooks.company_id', '=', Configure::get('Blesta.company_id'))
+            ->where('webhooks.type', '=', $type)
+            ->where('webhook_events.event', '=', $event)
+            ->fetch();
+
+        if ($webhook) {
+            $webhook->events = $this->Form->collapseObjectArray(
+                $this->Record->select('webhook_events.event')
+                    ->from('webhook_events')
+                    ->where('webhook_id', '=', $webhook->id)
+                    ->fetchAll(),
+                'event'
+            );
+
             $webhook->fields = $this->Record->select(['webhook_fields.field', 'webhook_fields.parameter'])
                 ->from('webhook_fields')
                 ->where('webhook_id', '=', $webhook->id)
@@ -403,11 +468,23 @@ class WebhooksWebhooks extends WebhooksModel
         $type = 'incoming',
         $order_by = ['method' => 'DESC']
     ) {
-        return $this->Record->select()->from('webhooks')
+        $webhooks = $this->Record->select()->from('webhooks')
             ->where('company_id', '=', Configure::get('Blesta.company_id'))
             ->where('type', '=', $type)
             ->order($order_by)
             ->fetchAll();
+
+        foreach ($webhooks as &$webhook) {
+            $webhook->events = $this->Form->collapseObjectArray(
+                $this->Record->select('webhook_events.event')
+                    ->from('webhook_events')
+                    ->where('webhook_id', '=', $webhook->id)
+                    ->fetchAll(),
+                'event'
+            );
+        }
+
+        return $webhooks;
     }
 
     /**
@@ -426,11 +503,23 @@ class WebhooksWebhooks extends WebhooksModel
         $page = 1,
         $order_by = ['method' => 'DESC']
     ) {
-        return $this->Record->select()->from('webhooks')
+        $webhooks = $this->Record->select()->from('webhooks')
             ->where('company_id', '=', Configure::get('Blesta.company_id'))
             ->where('type', '=', $type)
             ->order($order_by)
             ->limit($this->getPerPage(), (max(1, $page) - 1) * $this->getPerPage())
             ->fetchAll();
+
+        foreach ($webhooks as &$webhook) {
+            $webhook->events = $this->Form->collapseObjectArray(
+                $this->Record->select('webhook_events.event')
+                    ->from('webhook_events')
+                    ->where('webhook_id', '=', $webhook->id)
+                    ->fetchAll(),
+                'event'
+            );
+        }
+
+        return $webhooks;
     }
 }
