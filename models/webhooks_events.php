@@ -59,11 +59,6 @@ class WebhooksEvents extends WebhooksModel
     {
         // Check if the current instance of the class, has the observers stored in memory
         if (!empty($this->observers) && is_array($this->observers)) {
-            Cache::clearCache(
-                'event_observers',
-                Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
-            );
-
             return $this->observers;
         }
 
@@ -122,10 +117,23 @@ class WebhooksEvents extends WebhooksModel
         // Cache the observers
         $this->observers = $observers;
         if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
+            // Get a list of installed plugins at the moment of caching the observers list
+            $installed_plugins = $this->Form->collapseObjectArray(
+                $this->PluginManager->getAll(Configure::get('Blesta.company_id')),
+                'name',
+                'dir'
+            );
+
             try {
                 Cache::writeCache(
                     'event_observers',
                     base64_encode(serialize($this->observers)),
+                    strtotime(Configure::get('Blesta.cache_length')) - time(),
+                    Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
+                );
+                Cache::writeCache(
+                    'installed_plugins',
+                    base64_encode(serialize($installed_plugins)),
                     strtotime(Configure::get('Blesta.cache_length')) - time(),
                     Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
                 );

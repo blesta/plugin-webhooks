@@ -36,6 +36,9 @@ class WebhooksPlugin extends Plugin
         if (!isset($this->Record)) {
             Loader::loadComponents($this, ['Record']);
         }
+        if (!isset($this->CronTasks)) {
+            Loader::loadModels($this, ['CronTasks']);
+        }
 
         // Add all webhook tables, *IFF* not already added
         try {
@@ -62,6 +65,9 @@ class WebhooksPlugin extends Plugin
             $this->Input->setErrors(['db'=> ['create'=>$e->getMessage()]]);
             return;
         }
+
+        // Add cron tasks
+        $this->addCronTasks($this->getCronTasks());
     }
 
     /**
@@ -73,6 +79,8 @@ class WebhooksPlugin extends Plugin
      */
     public function uninstall($plugin_id, $last_instance)
     {
+        $cron_tasks = $this->getCronTasks();
+
         // Remove the tables created by this plugin
         if ($last_instance) {
             try {
@@ -82,6 +90,24 @@ class WebhooksPlugin extends Plugin
                 // Error dropping... no permission?
                 $this->Input->setErrors(['db'=> ['create'=>$e->getMessage()]]);
                 return;
+            }
+
+            // Remove the cron tasks
+            foreach ($cron_tasks as $task) {
+                $cron_task = $this->CronTasks
+                    ->getByKey($task['key'], $task['dir'], $task['task_type']);
+                if ($cron_task) {
+                    $this->CronTasks->deleteTask($cron_task->id, $task['task_type'], $task['dir']);
+                }
+            }
+        }
+
+        // Remove individual cron task runs
+        foreach ($cron_tasks as $task) {
+            $cron_task_run = $this->CronTasks
+                ->getTaskRunByKey($task['key'], $task['dir'], false, $task['task_type']);
+            if ($cron_task_run) {
+                $this->CronTasks->deleteTaskRun($cron_task_run->task_run_id);
             }
         }
     }
@@ -125,6 +151,9 @@ class WebhooksPlugin extends Plugin
 
         // Drop the index on 'company_id'
         $this->Record->query('DROP INDEX `company_id` ON `webhooks`');
+
+        // Add cron tasks
+        $this->addCronTasks($this->getCronTasks());
     }
 
     /**
@@ -207,5 +236,120 @@ class WebhooksPlugin extends Plugin
                 'options' => ['parent' => 'tools/']
             ]
         ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function cron($key)
+    {
+        if ($key === 'clear_cache') {
+            $this->clearCache(Configure::get('Blesta.company_id'));
+        }
+    }
+
+    /**
+     * Clears the plugin cache
+     *
+     * @param int $company_id
+     */
+    private function clearCache($company_id)
+    {
+        Loader::loadModels($this, ['PluginManager']);
+
+        $installed_plugins = Cache::fetchCache(
+            'installed_plugins',
+            $company_id . DS . 'plugins' . DS . 'webhooks' . DS
+        );
+        $current_plugins = $this->Form->collapseObjectArray(
+            $this->PluginManager->getAll($company_id),
+            'name',
+            'dir'
+        );
+
+        if ($installed_plugins) {
+            $installed_plugins = (array) unserialize(base64_decode($installed_plugins));
+        } else {
+            $installed_plugins = $current_plugins;
+        }
+
+        if ($current_plugins == $installed_plugins) {
+            return;
+        }
+
+        if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
+            Cache::clearCache(
+                'event_observers',
+                $company_id . DS . 'plugins' . DS . 'webhooks' . DS
+            );
+            Cache::writeCache(
+                'installed_plugins',
+                base64_encode(serialize($current_plugins)),
+                strtotime(Configure::get('Blesta.cache_length')) - time(),
+                $company_id . DS . 'plugins' . DS . 'webhooks' . DS
+            );
+        }
+    }
+
+    /**
+     * Retrieves cron tasks available to this plugin along with their default values
+     *
+     * @return array A list of cron tasks
+     */
+    private function getCronTasks()
+    {
+        return [
+            // Cron task to check for incoming email tickets
+            [
+                'key' => 'clear_cache',
+                'dir' => 'webhooks',
+                'task_type' => 'plugin',
+                'name' => Language::_(
+                    'WebhooksPlugin.getCronTasks.clear_cache_name',
+                    true
+                ),
+                'description' => Language::_(
+                    'WebhooksPlugin.getCronTasks.clear_cache_desc',
+                    true
+                ),
+                'type' => 'time',
+                'type_value' => '12:00:00',
+                'enabled' => 1
+            ]
+        ];
+    }
+
+    /**
+     * Attempts to add new cron tasks for this plugin
+     *
+     * @param array $tasks A list of cron tasks to add
+     */
+    private function addCronTasks(array $tasks)
+    {
+        foreach ($tasks as $task) {
+            $task_id = $this->CronTasks->add($task);
+
+            if (!$task_id) {
+                $cron_task = $this->CronTasks->getByKey(
+                    $task['key'],
+                    $task['dir'],
+                    $task['task_type']
+                );
+                if ($cron_task) {
+                    $task_id = $cron_task->id;
+                }
+            }
+
+            if ($task_id) {
+                $task_vars = ['enabled' => $task['enabled']];
+                if ($task['type'] === 'interval') {
+                    $task_vars['interval'] = $task['type_value'];
+                } else {
+                    $task_vars['time'] = $task['type_value'];
+                }
+
+                $this->CronTasks->addTaskRun($task_id, $task_vars);
+            }
+        }
     }
 }
