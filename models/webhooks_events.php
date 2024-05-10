@@ -241,11 +241,6 @@ class WebhooksEvents extends WebhooksModel
      */
     public function trigger(int $webhook_id, array $params = [])
     {
-        Cache::clearCache(
-            'event_observers',
-            Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
-        );
-
         // Get webhook
         Loader::loadModels($this, ['Webhooks.WebhooksWebhooks']);
         $webhook = $this->WebhooksWebhooks->get($webhook_id);
