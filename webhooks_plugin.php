@@ -255,37 +255,9 @@ class WebhooksPlugin extends Plugin
      */
     private function clearCache($company_id)
     {
-        Loader::loadModels($this, ['PluginManager']);
-
-        $installed_plugins = Cache::fetchCache(
-            'installed_plugins',
-            $company_id . DS . 'plugins' . DS . 'webhooks' . DS
-        );
-        $current_plugins = $this->Form->collapseObjectArray(
-            $this->PluginManager->getAll($company_id),
-            'name',
-            'dir'
-        );
-
-        if ($installed_plugins) {
-            $installed_plugins = (array) unserialize(base64_decode($installed_plugins));
-        } else {
-            $installed_plugins = $current_plugins;
-        }
-
-        if ($current_plugins == $installed_plugins) {
-            return;
-        }
-
         if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
             Cache::clearCache(
                 'event_observers',
-                $company_id . DS . 'plugins' . DS . 'webhooks' . DS
-            );
-            Cache::writeCache(
-                'installed_plugins',
-                base64_encode(serialize($current_plugins)),
-                strtotime(Configure::get('Blesta.cache_length')) - time(),
                 $company_id . DS . 'plugins' . DS . 'webhooks' . DS
             );
         }

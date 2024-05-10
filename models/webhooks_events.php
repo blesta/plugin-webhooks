@@ -57,11 +57,11 @@ class WebhooksEvents extends WebhooksModel
      */
     public function getObservers()
     {
-        // Check if the current instance of the class, has the observers stored in memory
-        if (!empty($this->observers) && is_array($this->observers)) {
+        if (!$this->pluginsHaveChanged() && !empty($this->observers) && is_array($this->observers)) {
+            // Check if the current instance of the class, has the observers stored in memory
             return $this->observers;
         }
-
+        
         // Get all observers
         $observers = [];
         foreach ($this->observer_dirs as $observer_dir) {
@@ -117,23 +117,10 @@ class WebhooksEvents extends WebhooksModel
         // Cache the observers
         $this->observers = $observers;
         if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
-            // Get a list of installed plugins at the moment of caching the observers list
-            $installed_plugins = $this->Form->collapseObjectArray(
-                $this->PluginManager->getAll(Configure::get('Blesta.company_id')),
-                'name',
-                'dir'
-            );
-
             try {
                 Cache::writeCache(
                     'event_observers',
                     base64_encode(serialize($this->observers)),
-                    strtotime(Configure::get('Blesta.cache_length')) - time(),
-                    Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
-                );
-                Cache::writeCache(
-                    'installed_plugins',
-                    base64_encode(serialize($installed_plugins)),
                     strtotime(Configure::get('Blesta.cache_length')) - time(),
                     Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
                 );
@@ -144,6 +131,37 @@ class WebhooksEvents extends WebhooksModel
         }
 
         return $observers;
+    }
+    
+    private function pluginsHaveChanged()
+    {
+        // Check if the list of plugins has changed since last time
+        $installed_plugins = Cache::fetchCache(
+            'installed_plugins',
+            Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
+        );
+        $current_plugins = $this->Form->collapseObjectArray(
+            $this->PluginManager->getAll(Configure::get('Blesta.company_id')),
+            'name',
+            'dir'
+        );
+
+        if ($installed_plugins) {
+            $installed_plugins = (array) unserialize(base64_decode($installed_plugins));
+        } else {
+            $installed_plugins = $current_plugins;
+        }
+        
+        if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
+            Cache::writeCache(
+                'installed_plugins',
+                base64_encode(serialize($current_plugins)),
+                strtotime(Configure::get('Blesta.cache_length')) - time(),
+                Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
+            );
+        }
+
+        return $current_plugins != $installed_plugins;
     }
 
     /**
