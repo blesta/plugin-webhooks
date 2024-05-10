@@ -133,6 +133,11 @@ class WebhooksEvents extends WebhooksModel
         return $observers;
     }
     
+    /**
+     * Check if the list of installed plugins has changed since the last time we fetched observers
+     * 
+     * @return bool True if the list of plugins have changed
+     */
     private function pluginsHaveChanged()
     {
         // Check if the list of plugins has changed since last time
