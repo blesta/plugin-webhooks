@@ -39,6 +39,8 @@ class WebhooksEvents extends WebhooksModel
     {
         parent::__construct();
 
+        Loader::loadModels($this, ['PluginManager']);
+
         $cache = Cache::fetchCache(
             'event_observers',
             Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
@@ -55,11 +57,11 @@ class WebhooksEvents extends WebhooksModel
      */
     public function getObservers()
     {
-        // Check if the current instance of the class, has the observers stored in memory
-        if (!empty($this->observers) && is_array($this->observers)) {
+        if (!$this->pluginsHaveChanged() && !empty($this->observers) && is_array($this->observers)) {
+            // Check if the current instance of the class, has the observers stored in memory
             return $this->observers;
         }
-
+        
         // Get all observers
         $observers = [];
         foreach ($this->observer_dirs as $observer_dir) {
@@ -70,6 +72,22 @@ class WebhooksEvents extends WebhooksModel
             foreach ($files as $file) {
                 if ($file->getExtension() == 'php' && $file->isFile()){
                     try {
+                        // If the observer belongs to a Plugin, check if the plugin
+                        // is installed for the current company
+                        if (str_contains($observer_dir, PLUGINDIR)) {
+                            if (!str_contains($file->getFilename(), '_observer')) {
+                                continue;
+                            }
+
+                            $plugin_file = str_replace(PLUGINDIR, '', $file->getRealPath());
+                            $plugin = explode(DS, $plugin_file);
+                            $plugin = $plugin[0] ?? null;
+
+                            if (!$this->PluginManager->isInstalled($plugin, Configure::get('Blesta.company_id'))) {
+                                continue;
+                            }
+                        }
+
                         @include_once $file->getRealPath();
                     } catch (Throwable $e) {
                         // Nothing to do
@@ -113,6 +131,42 @@ class WebhooksEvents extends WebhooksModel
         }
 
         return $observers;
+    }
+    
+    /**
+     * Check if the list of installed plugins has changed since the last time we fetched observers
+     * 
+     * @return bool True if the list of plugins have changed
+     */
+    private function pluginsHaveChanged()
+    {
+        // Check if the list of plugins has changed since last time
+        $installed_plugins = Cache::fetchCache(
+            'installed_plugins',
+            Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
+        );
+        $current_plugins = $this->Form->collapseObjectArray(
+            $this->PluginManager->getAll(Configure::get('Blesta.company_id')),
+            'name',
+            'dir'
+        );
+
+        if ($installed_plugins) {
+            $installed_plugins = (array) unserialize(base64_decode($installed_plugins));
+        } else {
+            $installed_plugins = $current_plugins;
+        }
+        
+        if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
+            Cache::writeCache(
+                'installed_plugins',
+                base64_encode(serialize($current_plugins)),
+                strtotime(Configure::get('Blesta.cache_length')) - time(),
+                Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
+            );
+        }
+
+        return $current_plugins != $installed_plugins;
     }
 
     /**
