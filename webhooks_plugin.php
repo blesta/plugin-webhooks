@@ -56,7 +56,7 @@ class WebhooksPlugin extends Plugin
             $this->Record->
                 setField('webhook_id', ['type' => 'int', 'size' => 10, 'unsigned' => true])->
                 setField('event', ['type' => 'varchar', 'size' => 255])->
-                setKey(['webhook_id', 'field'], 'primary')->
+                setKey(['webhook_id', 'event'], 'primary')->
                 create('webhook_events', true);
 
             // webhook_fields
@@ -85,6 +85,9 @@ class WebhooksPlugin extends Plugin
      */
     public function uninstall($plugin_id, $last_instance)
     {
+        if (!isset($this->CronTasks)) {
+            Loader::loadModels($this, ['CronTasks']);
+        }
         $cron_tasks = $this->getCronTasks();
 
         // Remove the tables created by this plugin
