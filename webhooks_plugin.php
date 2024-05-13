@@ -47,7 +47,6 @@ class WebhooksPlugin extends Plugin
                 setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])->
                 setField('company_id', ['type' => 'int', 'size' => 10, 'unsigned' => true])->
                 setField('callback', ['type' => 'varchar', 'size' => 255])->
-                setField('event', ['type' => 'varchar', 'size' => 255])->
                 setField('type', ['type' => 'enum', 'size' => "'incoming','outgoing'", 'default' => 'incoming'])->
                 setField('method', ['type' => 'enum', 'size' => "'get','post','put','put_json','post_json'", 'default' => 'post'])->
                 setKey(['id'], 'primary')->
