@@ -317,9 +317,9 @@ class WebhooksEvents extends WebhooksModel
                 foreach ($webhooks as $webhook) {
                     $request = curl_init();
                     $headers = [
-                        'X-Blesta-Event' => $event->getName(),
-                        'X-Webhook-Id' => $webhook->id,
-                        'User-Agent' => 'Blesta-Webhook'
+                        'X-Blesta-Event: ' . $event->getName(),
+                        'X-Webhook-Id: ' . $webhook->id,
+                        'User-Agent: Blesta-Webhook'
                     ];
 
                     // Set request fields
