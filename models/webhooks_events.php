@@ -316,14 +316,11 @@ class WebhooksEvents extends WebhooksModel
                 // Run each outgoing webhook
                 foreach ($webhooks as $webhook) {
                     $request = curl_init();
-                    $headers = [
-                        'X-Blesta-Event' => $event->getName(),
-                        'X-Webhook-Id' => $webhook->id,
-                        'User-Agent' => 'Blesta-Webhook'
-                    ];
 
                     // Set request fields
                     $fields = $this->getFields($webhook->id, (array) $event->getParams());
+                    $fields['event_name'] = $event->getName();
+                    $fields['webhook_id'] = $webhook->id;
 
                     if ($webhook->method == 'get') {
                         $webhook->callback .= empty($fields) ? '' : '?' . http_build_query($fields);
