@@ -316,6 +316,11 @@ class WebhooksEvents extends WebhooksModel
                 // Run each outgoing webhook
                 foreach ($webhooks as $webhook) {
                     $request = curl_init();
+                    $headers = [
+                        'X-Blesta-Event' => $event->getName(),
+                        'X-Webhook-Id' => $webhook->id,
+                        'User-Agent' => 'Blesta-Webhook'
+                    ];
 
                     // Set request fields
                     $fields = $this->getFields($webhook->id, (array) $event->getParams());
@@ -335,7 +340,7 @@ class WebhooksEvents extends WebhooksModel
                     if ($webhook->method == 'post' || $webhook->method == 'put') {
                         curl_setopt($request, CURLOPT_POSTFIELDS, http_build_query($fields));
                     } else if ($webhook->method == 'post_json' || $webhook->method == 'put_json') {
-                        curl_setopt($request, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                        $headers[] = 'Content-Type: application/json';
                         curl_setopt($request, CURLOPT_POSTFIELDS, json_encode($fields));
                     }
 
@@ -346,6 +351,7 @@ class WebhooksEvents extends WebhooksModel
                         $webhook->method = 'put';
                     }
 
+                    curl_setopt($request, CURLOPT_HTTPHEADER, $headers);
                     curl_setopt($request, CURLOPT_CUSTOMREQUEST, strtoupper($webhook->method));
 
                     // Set SSL verification
