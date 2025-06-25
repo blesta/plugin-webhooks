@@ -4,6 +4,7 @@ $lang['AdminMain.!tooltip.callback'] = 'The callback represents where the reques
 $lang['AdminMain.!success.webhook_added'] = 'The webhook was added successfully!';
 $lang['AdminMain.!success.webhook_updated'] = 'The webhook was updated successfully!';
 $lang['AdminMain.!success.webhook_deleted'] = 'The webhook was deleted successfully!';
+$lang['AdminMain.!success.webhook_retried'] = 'The webhook was retried successfully!';
 
 $lang['AdminMain.modal.delete_text'] = 'Are you sure you want to delete this webhook?';
 
@@ -23,6 +24,7 @@ $lang['AdminMain.index.heading_event'] = 'Event';
 $lang['AdminMain.index.heading_method'] = 'Method';
 $lang['AdminMain.index.heading_options'] = 'Options';
 
+$lang['AdminMain.index.option_view'] = 'View';
 $lang['AdminMain.index.option_edit'] = 'Edit';
 $lang['AdminMain.index.option_delete'] = 'Delete';
 
@@ -66,3 +68,25 @@ $lang['AdminMain.edit.field_add_field'] = 'Add Field';
 $lang['AdminMain.edit.field_editsubmit'] = 'Edit Webhook';
 $lang['AdminMain.edit.field_cancel'] = 'Cancel';
 $lang['AdminMain.edit.text_fields_map'] = 'This section allows you to rename the name of the fields of the event being triggered to a custom name before they are sent to the callback. Subfields should be separated by a period (e.g. vars.status). To see a list of all the fields supported by each one of the events, you can check the following <a href="https://docs.blesta.com/display/dev/Event+Handlers" target="_blank">link</a>.';
+
+
+// View webhook
+$lang['AdminMain.view.boxtitle_viewwebhook'] = 'View Webhook';
+$lang['AdminMain.view.heading_webhook'] = 'Webhook';
+$lang['AdminMain.view.heading_callback'] = 'Callback';
+$lang['AdminMain.view.heading_type'] = 'Type';
+$lang['AdminMain.view.heading_method'] = 'Method';
+$lang['AdminMain.view.heading_events'] = 'Events';
+$lang['AdminMain.view.heading_event'] = 'Event';
+$lang['AdminMain.view.heading_fields_map'] = 'Fields Map';
+$lang['AdminMain.view.heading_field'] = 'Original Field';
+$lang['AdminMain.view.heading_parameter'] = 'New Field';
+$lang['AdminMain.view.heading_logs'] = 'Logs';
+$lang['AdminMain.view.heading_response'] = 'Response';
+$lang['AdminMain.view.heading_http_response'] = 'HTTP Response';
+$lang['AdminMain.view.heading_date_triggered'] = 'Date Triggered';
+$lang['AdminMain.view.heading_date_last_retry'] = 'Last Retry';
+$lang['AdminMain.view.heading_options'] = 'Options';
+
+$lang['AdminMain.view.confirm_retry'] = 'Are you sure you want to retry this event?';
+$lang['AdminMain.view.option_retry'] = 'Retry';

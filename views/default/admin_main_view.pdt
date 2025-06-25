@@ -1,0 +1,165 @@
+<?php
+echo ($message ?? null);
+
+$this->Widget->clear();
+$this->Widget->create($this->_('AdminMain.view.boxtitle_viewwebhook', true), ['id' => 'admin_main_view'], (isset($render_section) ? $render_section : null));
+?>
+    <div class="inner">
+        <div class="row">
+            <div class="col-lg-6 pl-lg-2 pr-lg-0">
+                <div class="title_row first">
+                    <h3><?php $this->_('AdminMain.view.heading_webhook');?></h3>
+                </div>
+                <div class="pad pb-3">
+                    <table class="table fields_table">
+                        <tr class="heading_row">
+                            <td><?php $this->_('AdminMain.view.heading_callback');?></td>
+                            <td><?php $this->_('AdminMain.view.heading_type');?></td>
+                            <td class="last"><?php $this->_('AdminMain.view.heading_method');?></td>
+                        </tr>
+                            <tr class="field_row">
+                                <td>
+                                    <?php echo $this->Html->safe($webhook->callback ?? null);?>
+                                </td>
+                                <td>
+                                    <?php echo $this->Html->safe($types[$webhook->type] ?? null);?>
+                                </td>
+                                <td>
+                                    <?php echo $this->Html->safe($methods[$webhook->method] ?? null);?>
+                                </td>
+                            </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="title_row first">
+                    <h3><?php $this->_('AdminMain.view.heading_events');?></h3>
+                </div>
+                <div class="pad">
+                    <table class="table fields_table">
+                        <tr class="heading_row">
+                            <td class="last"><?php $this->_('AdminMain.view.heading_event');?></td>
+                        </tr>
+                        <?php
+                        $i = 0;
+                        foreach ($webhook->events ?? [] as $event) {
+                        ?>
+                            <tr class="field_row">
+                                <td>
+                                    <?php echo $this->Html->safe($event ?? null);?>
+                                </td>
+                            </tr>
+                        <?php
+                        }
+                        unset($i);
+                        ?>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <?php
+        if (!empty($webhook->fields ?? [])) {
+        ?>
+            <div class="title_row">
+                <h3><?php $this->_('AdminMain.view.heading_fields_map');?></h3>
+            </div>
+            <div class="pad">
+                <table class="table fields_table">
+                    <tr class="heading_row">
+                        <td><?php $this->_('AdminMain.view.heading_field');?></td>
+                        <td class="last"><?php $this->_('AdminMain.view.heading_parameter');?></td>
+                    </tr>
+                    <?php
+                    $i = 0;
+                    foreach ($webhook->fields ?? [] as $field) {
+                        $field = (array) $field;
+                    ?>
+                        <tr class="field_row<?php echo (($i++%2 == 1) ? ' odd_row' : '');?>">
+                            <td>
+                                <?php echo $this->Html->safe($field['field'] ?? '');?>
+                            </td>
+                            <td>
+                                <?php echo $this->Html->safe($field['parameter'] ?? '');?>
+                            </td>
+                        </tr>
+                    <?php
+                    }
+                    unset($i);
+                    ?>
+                </table>
+            </div>
+        <?php
+        }
+        ?>
+
+        <div class="title_row">
+            <h3><?php $this->_('AdminMain.view.heading_logs');?></h3>
+        </div>
+        <div class="pad">
+            <table class="table fields_table">
+                <tr class="heading_row">
+                    <td><?php $this->_('AdminMain.view.heading_event');?></td>
+                    <td><?php $this->_('AdminMain.view.heading_response');?></td>
+                    <td><?php $this->_('AdminMain.view.heading_http_response');?></td>
+                    <td><?php $this->_('AdminMain.view.heading_date_triggered');?></td>
+                    <td><?php $this->_('AdminMain.view.heading_date_last_retry');?></td>
+                    <td class="last"><?php $this->_('AdminMain.view.heading_options');?></td>
+                </tr>
+                <?php
+                $i = 0;
+                foreach ($logs ?? [] as $log) {
+                ?>
+                    <tr class="field_row<?php echo (($i++%2 == 1) ? ' odd_row' : '');?>">
+                        <td>
+                            <?php echo $this->Html->safe($log->event ?? '');?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->fieldTextarea('response', ($log->response ?? ''), ['class' => 'w-100', 'rows' => 4]);
+                            ?>
+                        </td>
+                        <td>
+                            <?php echo $this->Html->safe($log->http_response ?? '');?>
+                        </td>
+                        <td>
+                            <?php echo $this->Date->cast($log->date_triggered, 'date_time');?>
+                        </td>
+                        <td>
+                            <?php echo !empty($log->date_last_retry) ? $this->Date->cast($log->date_last_retry, 'date_time') : '';?>
+                        </td>
+                        <td>
+                            <?php
+                            $this->Form->create($this->base_uri . 'plugin/webhooks/admin_main/retry/');
+                            $this->Form->fieldHidden('id', ($log->id ?? null));
+                            ?>
+                            <a href="<?php echo $this->base_uri . 'plugin/webhooks/admin_main/retry/' . $this->Html->safe($log->id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminMain.view.confirm_retry', true));?>"><?php $this->_('AdminMain.view.option_retry');?></a>
+                            <?php
+                            $this->Form->end();
+                            ?>
+                        </td>
+                    </tr>
+                <?php
+                }
+                unset($i);
+                ?>
+            </table>
+            <?php
+            // Set pagination
+            $this->Pagination->build();
+            ?>
+        </div>
+    </div>
+<?php $this->Widget->end();?>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        // Handle confirmation
+        $('#admin_main_view .table a.manage[rel]').blestaModalConfirm({
+            base_url: '<?php echo $this->base_uri;?>',
+            close: '<?php echo addslashes($this->_('AppController.modal.text_close', true));?>',
+            submit: true
+        });
+    });
+</script>

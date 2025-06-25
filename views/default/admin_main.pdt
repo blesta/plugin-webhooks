@@ -57,6 +57,7 @@
                 </td>
                 <td><?php echo $this->Html->safe(strtoupper($webhook->method ?? ''));?></td>
                 <td class="last">
+                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/view/' . $webhook->id);?>"><?php $this->_('AdminMain.index.option_view');?></a>,
                     <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/edit/' . $webhook->id);?>"><?php $this->_('AdminMain.index.option_edit');?></a>,
                     <?php
                     $this->Form->create($this->base_uri . 'plugin/webhooks/admin_main/delete/');

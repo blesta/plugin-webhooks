@@ -155,6 +155,56 @@ class AdminMain extends WebhooksController
     }
 
     /**
+     * Shows the logs of an existing webhook
+     */
+    public function view()
+    {
+        $page = (isset($this->get[1]) ? (int)$this->get[1] : 1);
+        $sort = (isset($this->get['sort']) ? $this->get['sort'] : 'id');
+        $order = (isset($this->get['order']) ? $this->get['order'] : 'desc');
+
+        $webhook_id = (isset($this->get[0]) ? $this->get[0] : null);
+        if (!($webhook = $this->WebhooksWebhooks->get($webhook_id))) {
+            $this->redirect($this->base_uri . 'plugin/webhooks/admin_main/');
+        }
+
+        // Get all the available events
+        $events = $this->WebhooksEvents->getAll();
+
+        // Get all the available types
+        $types = $this->WebhooksWebhooks->getTypes();
+
+        // Get all the available methods
+        $methods = $this->WebhooksWebhooks->getMethods();
+
+        // Get logs
+        $logs = $this->WebhooksEvents->getLogs($webhook->id, $page, [$sort => $order]);
+        $total_results = $this->WebhooksEvents->getLogsCount($webhook->id);
+
+        // Set pagination parameters, set group if available
+        $params = ['sort' => $sort, 'order' => $order];
+
+        // Overwrite default pagination settings
+        $settings = array_merge(
+            Configure::get('Blesta.pagination'),
+            [
+                'total_results' => $total_results,
+                'uri' => $this->base_uri . 'plugin/webhooks/admin_main/view/' . $webhook->id . '/[p]/',
+                'params' => $params
+            ]
+        );
+        $this->setPagination($this->get, $settings);
+
+        $this->set('events', $events);
+        $this->set('types', $types);
+        $this->set('methods', $methods);
+        $this->set('webhook', $webhook);
+        $this->set('logs', $logs);
+
+        return $this->renderAjaxWidgetIfAsync(isset($this->get[1]) || isset($this->get['sort']));
+    }
+
+    /**
      * Delete a webhook
      */
     public function delete()
@@ -180,5 +230,37 @@ class AdminMain extends WebhooksController
         }
 
         $this->redirect($this->base_uri . 'plugin/webhooks/admin_main/');
+    }
+
+    /**
+     * Retries to execute a webhook from its log
+     */
+    public function retry()
+    {
+        if (!isset($this->post['id']) || !($log = $this->WebhooksEvents->getLog($this->post['id']))) {
+            $this->redirect($this->base_uri . 'plugin/webhooks/admin_main/');
+        }
+
+        if (!($webhook = $this->WebhooksWebhooks->get($log->webhook_id)) ||
+            $this->company_id != $webhook->company_id) {
+            $this->redirect($this->base_uri . 'plugin/webhooks/admin_main/');
+        }
+
+        // Attempt to retry the webhook
+        $this->WebhooksEvents->retryLog($log->id);
+
+        // Set message
+        if (($errors = $this->WebhooksEvents->errors())) {
+            $this->flashMessage('error', $errors, null, false);
+        } else {
+            $this->flashMessage(
+                'message',
+                Language::_('AdminMain.!success.webhook_retried', true),
+                null,
+                false
+            );
+        }
+
+        $this->redirect($this->base_uri . 'plugin/webhooks/admin_main/view/' . $webhook->id . '/');
     }
 }

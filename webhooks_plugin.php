@@ -66,9 +66,24 @@ class WebhooksPlugin extends Plugin
                 setField('parameter', ['type' => 'varchar', 'size' => 255])->
                 setKey(['webhook_id', 'field'], 'primary')->
                 create('webhook_fields', true);
+
+            // log_webhooks
+            $this->Record->
+                setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])->
+                setField('staff_id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'is_null' => true, 'default' => null])->
+                setField('webhook_id', ['type' => 'int', 'size' => 10, 'unsigned' => true])->
+                setField('type', ['type' => 'enum', 'size' => "'incoming','outgoing'", 'default' => 'incoming'])->
+                setField('event', ['type' => 'varchar', 'size' => 255])->
+                setField('fields', ['type' => 'text'])->
+                setField('response', ['type' => 'text'])->
+                setField('http_response', ['type' => 'int', 'size' => 3, 'unsigned' => true])->
+                setField('date_triggered', ['type' => 'datetime'])->
+                setField('date_last_retry', ['type' => 'datetime', 'is_null' => true, 'default' => null])->
+                setKey(['id'], 'primary')->
+                create('log_webhooks', true);
         } catch (Exception $e) {
             // Error adding... no permission?
-            $this->Input->setErrors(['db'=> ['create'=>$e->getMessage()]]);
+            $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
             return;
         }
 
@@ -94,7 +109,9 @@ class WebhooksPlugin extends Plugin
         if ($last_instance) {
             try {
                 $this->Record->drop('webhooks');
+                $this->Record->drop('webhook_events');
                 $this->Record->drop('webhook_fields');
+                $this->Record->drop('log_webhooks');
             } catch (Exception $e) {
                 // Error dropping... no permission?
                 $this->Input->setErrors(['db'=> ['create'=>$e->getMessage()]]);
@@ -142,6 +159,11 @@ class WebhooksPlugin extends Plugin
             // Upgrade to 1.2.0
             if (version_compare($current_version, '1.2.0', '<')) {
                 $this->upgrade1_2_0();
+            }
+
+            // Upgrade to 1.3.0
+            if (version_compare($current_version, '1.3.0', '<')) {
+                $this->upgrade1_3_0();
             }
         }
     }
@@ -196,6 +218,32 @@ class WebhooksPlugin extends Plugin
 
         // Remove webhooks.callback column
         $this->Record->query('ALTER TABLE `webhooks` DROP COLUMN `event`;');
+    }
+
+    /**
+     * Update to v1.3.0
+     */
+    private function upgrade1_3_0()
+    {
+        // Add new log_webhooks table
+        try {
+            $this->Record->
+                setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])->
+                setField('staff_id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'is_null' => true, 'default' => null])->
+                setField('webhook_id', ['type' => 'int', 'size' => 10, 'unsigned' => true])->
+                setField('type', ['type' => 'enum', 'size' => "'incoming','outgoing'", 'default' => 'incoming'])->
+                setField('event', ['type' => 'varchar', 'size' => 255])->
+                setField('fields', ['type' => 'text'])->
+                setField('response', ['type' => 'text'])->
+                setField('http_response', ['type' => 'int', 'size' => 3, 'unsigned' => true])->
+                setField('date_triggered', ['type' => 'datetime'])->
+                setField('date_last_retry', ['type' => 'datetime', 'is_null' => true, 'default' => null])->
+                setKey(['id'], 'primary')->
+                create('log_webhooks', true);
+        } catch (Exception $e) {
+            // Error adding... no permission?
+            $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
+        }
     }
 
     /**
