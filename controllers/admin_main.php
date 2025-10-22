@@ -1,4 +1,7 @@
 <?php
+
+use Blesta\Core\Util\Input\Fields\InputFields;
+
 /**
  * Webhooks main controller
  *
@@ -20,9 +23,11 @@ class AdminMain extends WebhooksController
         // Load required models
         $this->uses([
             'Webhooks.WebhooksWebhooks',
-            'Webhooks.WebhooksEvents'
+            'Webhooks.WebhooksEvents',
+            'Webhooks.WebhooksLogs'
         ]);
         $this->helpers(['Form']);
+        $this->components(['SettingsCollection']);
 
         $this->structure->set(
             'page_title',
@@ -155,56 +160,6 @@ class AdminMain extends WebhooksController
     }
 
     /**
-     * Shows the logs of an existing webhook
-     */
-    public function view()
-    {
-        $page = (isset($this->get[1]) ? (int)$this->get[1] : 1);
-        $sort = (isset($this->get['sort']) ? $this->get['sort'] : 'id');
-        $order = (isset($this->get['order']) ? $this->get['order'] : 'desc');
-
-        $webhook_id = (isset($this->get[0]) ? $this->get[0] : null);
-        if (!($webhook = $this->WebhooksWebhooks->get($webhook_id))) {
-            $this->redirect($this->base_uri . 'plugin/webhooks/admin_main/');
-        }
-
-        // Get all the available events
-        $events = $this->WebhooksEvents->getAll();
-
-        // Get all the available types
-        $types = $this->WebhooksWebhooks->getTypes();
-
-        // Get all the available methods
-        $methods = $this->WebhooksWebhooks->getMethods();
-
-        // Get logs
-        $logs = $this->WebhooksEvents->getLogs($webhook->id, $page, [$sort => $order]);
-        $total_results = $this->WebhooksEvents->getLogsCount($webhook->id);
-
-        // Set pagination parameters, set group if available
-        $params = ['sort' => $sort, 'order' => $order];
-
-        // Overwrite default pagination settings
-        $settings = array_merge(
-            Configure::get('Blesta.pagination'),
-            [
-                'total_results' => $total_results,
-                'uri' => $this->base_uri . 'plugin/webhooks/admin_main/view/' . $webhook->id . '/[p]/',
-                'params' => $params
-            ]
-        );
-        $this->setPagination($this->get, $settings);
-
-        $this->set('events', $events);
-        $this->set('types', $types);
-        $this->set('methods', $methods);
-        $this->set('webhook', $webhook);
-        $this->set('logs', $logs);
-
-        return $this->renderAjaxWidgetIfAsync(isset($this->get[1]) || isset($this->get['sort']));
-    }
-
-    /**
      * Delete a webhook
      */
     public function delete()
@@ -233,11 +188,191 @@ class AdminMain extends WebhooksController
     }
 
     /**
+     * Shows a centralized list of all webhook logs
+     */
+    public function logs()
+    {
+        $page = (isset($this->get[0]) ? (int)$this->get[0] : 1);
+        $sort = (isset($this->get['sort']) ? $this->get['sort'] : 'id');
+        $order = (isset($this->get['order']) ? $this->get['order'] : 'desc');
+
+        // Build filters from POST or GET parameters
+        $post_filters = [];
+        if (!empty($this->post['filters'])) {
+            $post_filters = $this->post['filters'];
+            unset($this->post['filters']);
+
+            foreach ($post_filters as $filter => $value) {
+                if (empty($value)) {
+                    unset($post_filters[$filter]);
+                }
+            }
+        } elseif (!empty($this->get['filters'])) {
+            // Support GET parameters for direct linking
+            $post_filters = $this->get['filters'];
+
+            foreach ($post_filters as $filter => $value) {
+                if (empty($value)) {
+                    unset($post_filters[$filter]);
+                }
+            }
+        }
+
+        // Get company settings
+        $company_settings = $this->SettingsCollection->fetchSettings($this->Companies, $this->company_id);
+
+        // Get all webhooks for filter dropdown
+        $webhooks = $this->WebhooksWebhooks->getAll();
+
+        // Get logs
+        $logs = $this->WebhooksLogs->getAllLogs($post_filters, $page, [$sort => $order]);
+        $total_results = $this->WebhooksLogs->getAllLogsCount($post_filters);
+
+        // Set pagination parameters
+        $params = ['sort' => $sort, 'order' => $order];
+
+        // Overwrite default pagination settings
+        $settings = array_merge(
+            Configure::get('Blesta.pagination'),
+            [
+                'total_results' => $total_results,
+                'uri' => $this->base_uri . 'plugin/webhooks/admin_main/logs/[p]/',
+                'params' => $params
+            ]
+        );
+        $this->setPagination($this->get, $settings);
+
+        // Load date picker
+        $this->Javascript->setFile('date.min.js');
+        $this->Javascript->setFile('jquery.datePicker.min.js');
+        $this->Javascript->setInline(
+            'Date.firstDayOfWeek=' . ($company_settings['calendar_begins'] == 'sunday' ? 0 : 1) . ';'
+        );
+
+        // Set the input field filters for the widget
+        $filters = $this->getLogsFilters($post_filters, $webhooks);
+        $this->set('filters', $filters);
+        $this->set('filter_vars', $post_filters);
+
+        $this->set('logs', $logs);
+        $this->set('webhooks', $webhooks);
+        $this->set('sort', $sort);
+        $this->set('order', $order);
+        $this->set('negate_order', ($order == 'asc' ? 'desc' : 'asc'));
+
+        return $this->renderAjaxWidgetIfAsync(isset($this->get[0]) || isset($this->get['sort']));
+    }
+
+    /**
+     * Gets a list of input fields for filtering logs
+     *
+     * @param array $vars A list of submitted inputs that act as defaults for filter fields
+     * @param array $webhooks List of all webhooks
+     * @return InputFields An object representing the list of filter input fields
+     */
+    private function getLogsFilters(array $vars, array $webhooks)
+    {
+        $filters = new InputFields();
+
+        // Set webhook filter
+        $webhook_options = ['' => Language::_('AdminMain.logs.field_filterwebhook_all', true)];
+        foreach ($webhooks as $webhook) {
+            $webhook_options[$webhook->id] = $webhook->callback;
+        }
+        $webhook = $filters->label(
+            Language::_('AdminMain.logs.field_filterwebhook', true),
+            'webhook_id'
+        );
+        $webhook->attach(
+            $filters->fieldSelect(
+                'filters[webhook_id]',
+                $webhook_options,
+                isset($vars['webhook_id']) ? $vars['webhook_id'] : null,
+                ['class' => 'w-100', 'id' => 'webhook_id']
+            )
+        );
+        $filters->setField($webhook);
+
+        // Set event filter
+        $events = ['' => Language::_('AdminMain.logs.field_filterwebhook_all', true)]
+            + $this->WebhooksWebhooks->getEvents();
+        $event = $filters->label(
+            Language::_('AdminMain.logs.field_filterevent', true),
+            'event'
+        );
+        $event->attach(
+            $filters->fieldSelect(
+                'filters[event]',
+                $events,
+                isset($vars['event']) ? $vars['event'] : null,
+                ['class' => 'w-100', 'id' => 'webhook_id']
+            )
+        );
+        $filters->setField($event);
+
+        // Set HTTP status filter
+        $http_response = $filters->label(
+            Language::_('AdminMain.logs.field_filterhttpstatus', true),
+            'http_response'
+        );
+        $http_response->attach(
+            $filters->fieldText(
+                'filters[http_response]',
+                isset($vars['http_response']) ? $vars['http_response'] : null,
+                [
+                    'class' => 'stretch',
+                    'id' => 'http_response',
+                    'placeholder' => Language::_('AdminMain.logs.field_filterhttpstatus', true)
+                ]
+            )
+        );
+        $filters->setField($http_response);
+
+        // Set date start filter
+        $date_start = $filters->label(
+            Language::_('AdminMain.logs.field_filterdatestart', true),
+            'date_start'
+        );
+        $date_start->attach(
+            $filters->fieldText(
+                'filters[date_start]',
+                isset($vars['date_start']) ? $vars['date_start'] : null,
+                [
+                    'id' => 'date_start',
+                    'class' => 'date',
+                    'placeholder' => 'YYYY-MM-DD'
+                ]
+            )
+        );
+        $filters->setField($date_start);
+
+        // Set date end filter
+        $date_end = $filters->label(
+            Language::_('AdminMain.logs.field_filterdateend', true),
+            'date_end'
+        );
+        $date_end->attach(
+            $filters->fieldText(
+                'filters[date_end]',
+                isset($vars['date_end']) ? $vars['date_end'] : null,
+                [
+                    'id' => 'date_end',
+                    'class' => 'date',
+                    'placeholder' => 'YYYY-MM-DD'
+                ]
+            )
+        );
+        $filters->setField($date_end);
+
+        return $filters;
+    }
+
+    /**
      * Retries to execute a webhook from its log
      */
     public function retry()
     {
-        if (!isset($this->post['id']) || !($log = $this->WebhooksEvents->getLog($this->post['id']))) {
+        if (!isset($this->post['id']) || !($log = $this->WebhooksLogs->getLog($this->post['id']))) {
             $this->redirect($this->base_uri . 'plugin/webhooks/admin_main/');
         }
 
@@ -247,10 +382,10 @@ class AdminMain extends WebhooksController
         }
 
         // Attempt to retry the webhook
-        $this->WebhooksEvents->retryLog($log->id);
+        $this->WebhooksLogs->retryLog($log->id);
 
         // Set message
-        if (($errors = $this->WebhooksEvents->errors())) {
+        if (($errors = $this->WebhooksLogs->errors())) {
             $this->flashMessage('error', $errors, null, false);
         } else {
             $this->flashMessage(
@@ -261,6 +396,6 @@ class AdminMain extends WebhooksController
             );
         }
 
-        $this->redirect($this->base_uri . 'plugin/webhooks/admin_main/view/' . $webhook->id . '/');
+        $this->redirect($this->base_uri . 'plugin/webhooks/admin_main/logs/?filters[webhook_id]=' . $webhook->id);
     }
 }

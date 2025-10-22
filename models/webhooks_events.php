@@ -40,7 +40,7 @@ class WebhooksEvents extends WebhooksModel
     {
         parent::__construct();
 
-        Loader::loadModels($this, ['PluginManager']);
+        Loader::loadModels($this, ['PluginManager', 'Webhooks.WebhooksLogs']);
 
         $cache = Cache::fetchCache(
             'event_observers',
@@ -299,13 +299,13 @@ class WebhooksEvents extends WebhooksModel
             $response->setReturnValue($return[$event] ?? $return);
 
             // Log webhook
-            $this->log([
+            $this->WebhooksLogs->log([
                 'id' => $log_id,
                 'webhook_id' => $webhook->id,
                 'type' => 'incoming',
                 'event' => $event,
                 'fields' => (array) $params,
-                'response' => serialize($return),
+                'response' => $return,
                 'http_response' => 200
             ]);
         }
@@ -403,7 +403,7 @@ class WebhooksEvents extends WebhooksModel
                     $http_response = curl_getinfo($request, CURLINFO_HTTP_CODE);
 
                     // Log webhook
-                    $this->log([
+                    $this->WebhooksLogs->log([
                         'id' => $log_id,
                         'webhook_id' => $webhook->id,
                         'type' => 'outgoing',
@@ -422,82 +422,6 @@ class WebhooksEvents extends WebhooksModel
                 [$exception]
             );
         }
-    }
-
-    /**
-     * Retry an outgoing webhook
-     *
-     * @param int $log_id The ID of the webhook to be retried
-     * @return mixed An object representing a logged request
-     */
-    public function retryLog(int $log_id)
-    {
-        $log = $this->getLog($log_id);
-
-        if ($log) {
-            $params = (array) unserialize($log->fields);
-            $params['log_id'] = $log->id;
-
-            // Get webhook
-            Loader::loadModels($this, ['Webhooks.WebhooksWebhooks']);
-            $webhook = $this->WebhooksWebhooks->get($log->webhook_id);
-
-            // Retry event
-            if ($log->type == 'outgoing') {
-                $eventFactory = new EventFactory();
-                $this->listen(
-                    $eventFactory->event(
-                        $log->event,
-                        $params
-                    ),
-                    $webhook->id
-                );
-            } else if ($log->type == 'incoming') {
-                $this->trigger($webhook->id, $params, [$log->event]);
-            }
-        }
-    }
-
-    /**
-     * Fetch a webhook log
-     *
-     * @param int $id The ID of the webhook to fetch the logs
-     * @return mixed An object representing a logged request
-     */
-    public function getLog(int $id)
-    {
-        return $this->Record->select()->from('log_webhooks')
-            ->where('id', '=', $id)
-            ->fetch();
-    }
-
-    /**
-     * Fetch the logs for a webhook
-     *
-     * @param int $webhook_id The ID of the webhook to fetch the logs
-     * @param int $page The page to return results for (optional, default 1)
-     * @return mixed An array of objects, each one representing a logged request
-     */
-    public function getLogs(int $webhook_id, $page = 1, $order_by = ['id' => 'DESC'])
-    {
-        return $this->Record->select()->from('log_webhooks')
-            ->where('webhook_id', '=', $webhook_id)
-            ->order($order_by)
-            ->limit($this->getPerPage(), (max(1, $page) - 1) * $this->getPerPage())
-            ->fetchAll();
-    }
-
-    /**
-     * Fetch the number of logs available for a webhook
-     *
-     * @param int $webhook_id The ID of the webhook to fetch the logs
-     * @return int The number representing the total number of logs for this webhook
-     */
-    public function getLogsCount(int $webhook_id)
-    {
-        return $this->Record->select()->from('log_webhooks')
-            ->where('webhook_id', '=', $webhook_id)
-            ->numResults();
     }
 
     /**
@@ -533,64 +457,5 @@ class WebhooksEvents extends WebhooksModel
         $data = $this->Array->unflatten($data, '.', '');
 
         return $data;
-    }
-
-    /**
-     * Logs a webhook event
-     *
-     * @param array $vars An array containing the webhook information to log:
-     *
-     *  - staff_id The ID of the staff member who manually triggered the webhook (optional)
-     *  - webhook_id The ID of the webhook associated to this log
-     *  - event The event triggered by the webhook
-     *  - fields An array of fields sent by the webhook
-     *  - response The raw response returned by the callback
-     *  - http_response The HTTP response from the callback
-     */
-    private function log(array $vars)
-    {
-        // Set default values
-        if (!is_scalar($vars['fields'])) {
-            $vars['fields'] = serialize($vars['fields']);
-        }
-        if (!isset($vars['http_response'])) {
-            $vars['http_response'] = 500;
-        }
-        if (!isset($vars['staff_id'])) {
-            $vars['staff_id'] = null;
-        }
-        if (!isset($vars['response'])) {
-            $vars['response'] = '';
-        }
-        if (!isset($vars['type'])) {
-            $vars['type'] = 'outgoing';
-        }
-
-        $vars['date_triggered'] = $this->dateToUtc(date('c'));
-        $vars['date_last_retry'] = null;
-
-        $fields = [
-            'staff_id', 'webhook_id', 'type', 'event',
-            'fields', 'response', 'http_response',
-            'date_triggered', 'date_last_retry'
-        ];
-
-        // Check if we are updating an existing log
-        if (!empty($vars['id'])) {
-            $log = $this->Record->select()->from('log_webhooks')
-                ->where('id', '=', $vars['id'])
-                ->fetch();
-
-            if ($log) {
-                $vars['date_triggered'] = $log->date_triggered;
-                $vars['date_last_retry'] = $this->dateToUtc(date('c'));
-                unset($vars['id']);
-
-                $this->Record->where('log_webhooks.id', '=', $log->id)->
-                    update('log_webhooks', $vars, $fields);
-            }
-        } else {
-            $this->Record->insert('log_webhooks', $vars, $fields);
-        }
     }
 }

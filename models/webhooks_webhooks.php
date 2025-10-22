@@ -461,6 +461,7 @@ class WebhooksWebhooks extends WebhooksModel
      *
      *   - incoming All incoming webhooks
      *   - outgoing All outgoing webhooks
+     *   - null All webhooks
      * @param array $order_by The sort and order conditions (e.g. array('sort_field'=>"ASC"), optional)
      * @return array An array of stdClass objects representing webhooks
      */
@@ -468,10 +469,14 @@ class WebhooksWebhooks extends WebhooksModel
         $type = 'incoming',
         $order_by = ['method' => 'DESC']
     ) {
-        $webhooks = $this->Record->select()->from('webhooks')
-            ->where('company_id', '=', Configure::get('Blesta.company_id'))
-            ->where('type', '=', $type)
-            ->order($order_by)
+        $this->Record->select()->from('webhooks')
+            ->where('company_id', '=', Configure::get('Blesta.company_id'));
+
+        if (!is_null($type)) {
+            $this->Record->where('type', '=', $type);
+        }
+
+        $webhooks = $this->Record->order($order_by)
             ->fetchAll();
 
         foreach ($webhooks as &$webhook) {
