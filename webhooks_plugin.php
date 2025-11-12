@@ -66,9 +66,24 @@ class WebhooksPlugin extends Plugin
                 setField('parameter', ['type' => 'varchar', 'size' => 255])->
                 setKey(['webhook_id', 'field'], 'primary')->
                 create('webhook_fields', true);
+
+            // log_webhooks
+            $this->Record->
+                setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])->
+                setField('staff_id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'is_null' => true, 'default' => null])->
+                setField('webhook_id', ['type' => 'int', 'size' => 10, 'unsigned' => true])->
+                setField('type', ['type' => 'enum', 'size' => "'incoming','outgoing'", 'default' => 'incoming'])->
+                setField('event', ['type' => 'varchar', 'size' => 255])->
+                setField('fields', ['type' => 'text'])->
+                setField('response', ['type' => 'text'])->
+                setField('http_response', ['type' => 'int', 'size' => 3, 'unsigned' => true])->
+                setField('date_triggered', ['type' => 'datetime'])->
+                setField('date_last_retry', ['type' => 'datetime', 'is_null' => true, 'default' => null])->
+                setKey(['id'], 'primary')->
+                create('log_webhooks', true);
         } catch (Exception $e) {
             // Error adding... no permission?
-            $this->Input->setErrors(['db'=> ['create'=>$e->getMessage()]]);
+            $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
             return;
         }
 
@@ -94,7 +109,9 @@ class WebhooksPlugin extends Plugin
         if ($last_instance) {
             try {
                 $this->Record->drop('webhooks');
+                $this->Record->drop('webhook_events');
                 $this->Record->drop('webhook_fields');
+                $this->Record->drop('log_webhooks');
             } catch (Exception $e) {
                 // Error dropping... no permission?
                 $this->Input->setErrors(['db'=> ['create'=>$e->getMessage()]]);
@@ -142,6 +159,11 @@ class WebhooksPlugin extends Plugin
             // Upgrade to 1.2.0
             if (version_compare($current_version, '1.2.0', '<')) {
                 $this->upgrade1_2_0();
+            }
+
+            // Upgrade to 1.3.0
+            if (version_compare($current_version, '1.3.0', '<')) {
+                $this->upgrade1_3_0();
             }
         }
     }
@@ -196,6 +218,50 @@ class WebhooksPlugin extends Plugin
 
         // Remove webhooks.callback column
         $this->Record->query('ALTER TABLE `webhooks` DROP COLUMN `event`;');
+    }
+
+    /**
+     * Update to v1.3.0
+     */
+    private function upgrade1_3_0()
+    {
+        if (!isset($this->CronTasks)) {
+            Loader::loadModels($this, ['CronTasks']);
+        }
+
+        // Add new log_webhooks table
+        try {
+            $this->Record->
+                setField('id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'auto_increment' => true])->
+                setField('staff_id', ['type' => 'int', 'size' => 10, 'unsigned' => true, 'is_null' => true, 'default' => null])->
+                setField('webhook_id', ['type' => 'int', 'size' => 10, 'unsigned' => true])->
+                setField('type', ['type' => 'enum', 'size' => "'incoming','outgoing'", 'default' => 'incoming'])->
+                setField('event', ['type' => 'varchar', 'size' => 255])->
+                setField('fields', ['type' => 'text'])->
+                setField('response', ['type' => 'text'])->
+                setField('http_response', ['type' => 'int', 'size' => 3, 'unsigned' => true])->
+                setField('date_triggered', ['type' => 'datetime'])->
+                setField('date_last_retry', ['type' => 'datetime', 'is_null' => true, 'default' => null])->
+                setKey(['id'], 'primary')->
+                create('log_webhooks', true);
+        } catch (Exception $e) {
+            // Error adding... no permission?
+            $this->Input->setErrors(['db' => ['create' => $e->getMessage()]]);
+        }
+
+        // Add new cleanup_logs cron task
+        $cron_tasks = $this->getCronTasks();
+        $task = null;
+        foreach ($cron_tasks as $cron_task) {
+            if ($cron_task['key'] == 'cleanup_logs') {
+                $task = $cron_task;
+                break;
+            }
+        }
+
+        if ($task) {
+            $this->addCronTasks([$task]);
+        }
     }
 
     /**
@@ -285,22 +351,44 @@ class WebhooksPlugin extends Plugin
      */
     public function cron($key)
     {
-        if ($key === 'clear_cache') {
-            $this->clearCache(Configure::get('Blesta.company_id'));
+        switch ($key) {
+            case 'clear_cache':
+                $this->clearCache();
+                break;
+            case 'cleanup_logs':
+                $this->cleanupLogs();
+                break;
+        }
+    }
+
+    /**
+     * Cleans up old webhook logs based on the log_days system setting
+     */
+    private function cleanupLogs()
+    {
+        Loader::loadModels($this, ['Webhooks.WebhooksLogs']);
+        Loader::loadComponents($this, ['SettingsCollection']);
+
+        $company_settings = $this->SettingsCollection->fetchSettings(null, Configure::get('Blesta.company_id'));
+
+        if (isset($company_settings['log_days']) && is_numeric($company_settings['log_days'])) {
+            $past_date = $this->WebhooksLogs->dateToUtc(
+                strtotime('-' . abs((int) $company_settings['log_days']) . ' days')
+            );
+
+            $this->WebhooksLogs->deleteLogs($past_date);
         }
     }
 
     /**
      * Clears the plugin cache
-     *
-     * @param int $company_id
      */
-    private function clearCache($company_id)
+    private function clearCache()
     {
         if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
             Cache::clearCache(
                 'event_observers',
-                $company_id . DS . 'plugins' . DS . 'webhooks' . DS
+                Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
             );
         }
     }
@@ -313,7 +401,7 @@ class WebhooksPlugin extends Plugin
     private function getCronTasks()
     {
         return [
-            // Cron task to check for incoming email tickets
+            // Cron task to clear cache
             [
                 'key' => 'clear_cache',
                 'dir' => 'webhooks',
@@ -328,6 +416,23 @@ class WebhooksPlugin extends Plugin
                 ),
                 'type' => 'time',
                 'type_value' => '12:00:00',
+                'enabled' => 1
+            ],
+            // Cron task to cleanup old webhook logs
+            [
+                'key' => 'cleanup_logs',
+                'dir' => 'webhooks',
+                'task_type' => 'plugin',
+                'name' => Language::_(
+                    'WebhooksPlugin.getCronTasks.cleanup_logs_name',
+                    true
+                ),
+                'description' => Language::_(
+                    'WebhooksPlugin.getCronTasks.cleanup_logs_desc',
+                    true
+                ),
+                'type' => 'time',
+                'type_value' => '18:00:00',
                 'enabled' => 1
             ]
         ];

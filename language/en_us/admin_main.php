@@ -4,6 +4,7 @@ $lang['AdminMain.!tooltip.callback'] = 'The callback represents where the reques
 $lang['AdminMain.!success.webhook_added'] = 'The webhook was added successfully!';
 $lang['AdminMain.!success.webhook_updated'] = 'The webhook was updated successfully!';
 $lang['AdminMain.!success.webhook_deleted'] = 'The webhook was deleted successfully!';
+$lang['AdminMain.!success.webhook_retried'] = 'The webhook was retried successfully!';
 
 $lang['AdminMain.modal.delete_text'] = 'Are you sure you want to delete this webhook?';
 
@@ -12,10 +13,12 @@ $lang['AdminMain.modal.delete_text'] = 'Are you sure you want to delete this web
 $lang['AdminMain.index.page_title_index'] = 'Webhooks';
 $lang['AdminMain.index.page_title_add'] = 'Add Webhook';
 $lang['AdminMain.index.page_title_edit'] = 'Edit Webhook';
+$lang['AdminMain.index.page_title_logs'] = 'Webhook Logs';
 
 $lang['AdminMain.index.category_incoming'] = 'Incoming';
 $lang['AdminMain.index.category_outgoing'] = 'Outgoing';
 $lang['AdminMain.index.categorylink_addwebhook'] = 'Add Webhook';
+$lang['AdminMain.index.categorylink_viewlogs'] = 'View All Logs';
 $lang['AdminMain.index.boxtitle_webhooks'] = 'Webhooks';
 
 $lang['AdminMain.index.heading_callback'] = 'Callback';
@@ -23,6 +26,7 @@ $lang['AdminMain.index.heading_event'] = 'Event';
 $lang['AdminMain.index.heading_method'] = 'Method';
 $lang['AdminMain.index.heading_options'] = 'Options';
 
+$lang['AdminMain.index.option_logs'] = 'Logs';
 $lang['AdminMain.index.option_edit'] = 'Edit';
 $lang['AdminMain.index.option_delete'] = 'Delete';
 
@@ -66,3 +70,29 @@ $lang['AdminMain.edit.field_add_field'] = 'Add Field';
 $lang['AdminMain.edit.field_editsubmit'] = 'Edit Webhook';
 $lang['AdminMain.edit.field_cancel'] = 'Cancel';
 $lang['AdminMain.edit.text_fields_map'] = 'This section allows you to rename the name of the fields of the event being triggered to a custom name before they are sent to the callback. Subfields should be separated by a period (e.g. vars.status). To see a list of all the fields supported by each one of the events, you can check the following <a href="https://docs.blesta.com/display/dev/Event+Handlers" target="_blank">link</a>.';
+
+
+// Logs
+$lang['AdminMain.logs.boxtitle_logs'] = 'Webhook Logs';
+$lang['AdminMain.logs.categorylink_viewwebhooks'] = 'View Webhooks';
+
+$lang['AdminMain.logs.heading_webhook'] = 'Webhook';
+$lang['AdminMain.logs.heading_event'] = 'Event';
+$lang['AdminMain.logs.heading_response'] = 'Response';
+$lang['AdminMain.logs.heading_method'] = 'Method';
+$lang['AdminMain.logs.heading_http_response'] = 'HTTP Response';
+$lang['AdminMain.logs.heading_date_triggered'] = 'Date Triggered';
+$lang['AdminMain.logs.heading_date_last_retry'] = 'Last Retry';
+$lang['AdminMain.logs.heading_options'] = 'Options';
+
+$lang['AdminMain.logs.field_filterwebhook'] = 'Webhook';
+$lang['AdminMain.logs.field_filterwebhook_all'] = 'All Webhooks';
+$lang['AdminMain.logs.field_filterevent'] = 'Event';
+$lang['AdminMain.logs.field_filterhttpstatus'] = 'HTTP Status';
+$lang['AdminMain.logs.field_filterdatestart'] = 'Start Date';
+$lang['AdminMain.logs.field_filterdateend'] = 'End Date';
+
+$lang['AdminMain.logs.confirm_resend'] = 'Are you sure you want to resend this event?';
+$lang['AdminMain.logs.option_resend'] = 'Resend';
+
+$lang['AdminMain.logs.no_results'] = 'There are no logs available.';

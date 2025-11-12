@@ -8,3 +8,5 @@ $lang['WebhooksPlugin.description'] = 'Sends automated HTTP requests based on ev
 
 $lang['WebhooksPlugin.getCronTasks.clear_cache_name'] = 'Clear Cache';
 $lang['WebhooksPlugin.getCronTasks.clear_cache_desc'] = 'Clears the event observers list cache.';
+$lang['WebhooksPlugin.getCronTasks.cleanup_logs_name'] = 'Clean up Webhook Logs';
+$lang['WebhooksPlugin.getCronTasks.cleanup_logs_desc'] = 'Deletes webhook logs older than the configured log retention period.';

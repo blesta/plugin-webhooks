@@ -1,0 +1,99 @@
+        <?php
+        echo ($message ?? null);
+
+        $link_buttons = [
+            [
+                'icon' => 'fas fa-arrow-left',
+                'name' => $this->_('AdminMain.logs.categorylink_viewwebhooks', true),
+                'attributes' => [
+                    'title' => $this->_('AdminMain.logs.categorylink_viewwebhooks', true),
+                    'href' => $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/')
+                ]
+            ]
+        ];
+
+        $this->Widget->clear();
+        $this->Widget->setLinkButtons($link_buttons);
+        $this->Widget->setFilters($filters, $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/'), !empty($filter_vars));
+        $this->Widget->setAjaxFiltering();
+        $this->Widget->create($this->_('AdminMain.logs.boxtitle_logs', true), ['id' => 'admin_main_logs'], ($render_section ?? null));
+        ?>
+
+        <div class="inner">
+
+            <?php
+            if (($logs ?? false) && count($logs) > 0) {
+            ?>
+            <table class="table" id="logs_list">
+                <tr class="heading_row">
+                    <td><?php $this->_('AdminMain.logs.heading_webhook');?></td>
+                    <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=event&order=' . ($sort == 'event' ? $negate_order : $order) . '&' . http_build_query($filters ?? []));?>" class="ajax<?php echo $this->Html->safe($sort == 'event' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.logs.heading_event');?></a></span></td>
+                    <td><?php $this->_('AdminMain.logs.heading_response');?></td>
+                    <td><?php $this->_('AdminMain.logs.heading_method');?></td>
+                    <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=http_response&order=' . ($sort == 'http_response' ? $negate_order : $order) . '&' . http_build_query($filters ?? []));?>" class="ajax<?php echo $this->Html->safe($sort == 'http_response' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.logs.heading_http_response');?></a></span></td>
+                    <td><span><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=date_triggered&order=' . ($sort == 'date_triggered' ? $negate_order : $order) . '&' . http_build_query($filters ?? []));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_triggered' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.logs.heading_date_triggered');?></a></span></td>
+                    <td><?php $this->_('AdminMain.logs.heading_date_last_retry');?></td>
+                    <td class="last"><?php $this->_('AdminMain.logs.heading_options');?></td>
+                </tr>
+                <?php
+                $i = 0;
+                foreach ($logs as $log) {
+                ?>
+                <tr<?php echo (($i++%2 == 1) ? ' class="odd_row"' : '');?>>
+                    <td>
+                        <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/edit/' . $log->webhook_id);?>"><?php echo $this->Html->safe($log->callback ?? '');?></a>
+                    </td>
+                    <td><?php echo $this->Html->safe($log->event ?? '');?></td>
+                    <td>
+                        <?php
+                        $this->Form->fieldTextarea('response', ($log->response ?? ''), ['class' => 'w-100', 'rows' => 4]);
+                        ?>
+                    </td>
+                    <td><?php echo $this->Html->safe(strtoupper($log->method ?? ''));?></td>
+                    <td><?php echo $this->Html->safe($log->http_response ?? '');?></td>
+                    <td><?php echo $this->Date->cast($log->date_triggered, 'date_time');?></td>
+                    <td><?php echo !empty($log->date_last_retry) ? $this->Date->cast($log->date_last_retry, 'date_time') : '';?></td>
+                    <td class="last">
+                        <?php
+                        $this->Form->create($this->base_uri . 'plugin/webhooks/admin_main/retry/');
+                        $this->Form->fieldHidden('id', ($log->id ?? null));
+                        ?>
+                        <a href="<?php echo $this->base_uri . 'plugin/webhooks/admin_main/retry/' . $this->Html->safe($log->id) . '/';?>" class="manage" rel="<?php echo $this->Html->safe($this->_('AdminMain.logs.confirm_resend', true));?>"><?php $this->_('AdminMain.logs.option_resend');?></a>
+                        <?php
+                        $this->Form->end();
+                        ?>
+                    </td>
+                </tr>
+                <?php
+                }
+                unset($i);
+                ?>
+            </table>
+            <?php
+                // Set pagination
+                $this->Pagination->build();
+            } else {
+            ?>
+            <div class="empty_section">
+                <div class="empty_box">
+                    <?php $this->_('AdminMain.logs.no_results');?>
+                </div>
+            </div>
+            <?php
+            }
+            ?>
+        </div>
+
+        <?php $this->Widget->end();?>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('#date_start, #date_end').datePicker({startDate:'1996-01-01'});
+
+        $('#admin_main_logs a.manage[rel]').blestaModalConfirm({
+            base_url: '<?php echo $this->base_uri;?>',
+            close: '<?php echo addslashes($this->_('AppController.modal.text_close', true));?>',
+            submit: true
+        });
+    });
+</script>

@@ -2,6 +2,7 @@
 
 use Blesta\Core\Util\Events\Common\EventInterface;
 use Blesta\Core\Util\Events\EventFactory;
+use Blesta\Core\Util\Events\Event;
 
 /**
  * Webhook Events
@@ -39,7 +40,7 @@ class WebhooksEvents extends WebhooksModel
     {
         parent::__construct();
 
-        Loader::loadModels($this, ['PluginManager']);
+        Loader::loadModels($this, ['PluginManager', 'Webhooks.WebhooksLogs']);
 
         $cache = Cache::fetchCache(
             'event_observers',
@@ -236,28 +237,34 @@ class WebhooksEvents extends WebhooksModel
      *
      * @param int $webhook_id The ID of the webhook to trigger the event
      * @param array $params An array of parameters to be held by this event (optional)
+     * @param array $events The events to be triggered by the incoming webhook (optional)
      * @return array The list of parameters that were submitted along with any modifications made to them
      *  by the event handlers. In addition a __return__ item is included with the return array from the event.
      */
-    public function trigger(int $webhook_id, array $params = [])
+    public function trigger(int $webhook_id, array $params = [], array $events = null)
     {
         // Get webhook
         Loader::loadModels($this, ['Webhooks.WebhooksWebhooks']);
         $webhook = $this->WebhooksWebhooks->get($webhook_id);
 
         // Fetch all supported events
-        $events = $this->getAll();
+        $all_events = $this->getAll();
+        if (is_array($events)) {
+            $webhook->events = $events;
+        }
 
         // Process webhook events
         $return = [];
         foreach ($webhook->events as $event) {
             // Check the provided event is valid
-            if (!in_array($event, $events)) {
+            if (!in_array($event, $all_events)) {
                 continue;
             }
 
             // Format parameters
             $params = $this->getFields($webhook->id, $params);
+            $log_id = $params['log_id'] ?? null;
+            unset($params['log_id']);
 
             // Get the observer of the event
             $observers = $this->getObservers();
@@ -288,6 +295,19 @@ class WebhooksEvents extends WebhooksModel
                     }
                 }
             }
+
+            $response->setReturnValue($return[$event] ?? $return);
+
+            // Log webhook
+            $this->WebhooksLogs->log([
+                'id' => $log_id,
+                'webhook_id' => $webhook->id,
+                'type' => 'incoming',
+                'event' => $event,
+                'fields' => (array) $params,
+                'response' => $return,
+                'http_response' => 200
+            ]);
         }
 
         return $return;
@@ -297,17 +317,26 @@ class WebhooksEvents extends WebhooksModel
      * Listens to all events and triggers outgoing webhooks
      *
      * @param EventInterface $event The triggered event
+     * @param int $webhook_id The ID of the webhook used to trigger the event (optional)
      */
-    public function listen(EventInterface $event)
+    public function listen(EventInterface $event, int $webhook_id = null)
     {
         try {
             // Get the outgoing webhook for this event
-            $webhooks = $this->Record->select()->from('webhooks')
-                ->innerJoin('webhook_events', 'webhook_events.webhook_id', '=', 'webhooks.id', false)
-                ->where('webhooks.company_id', '=', Configure::get('Blesta.company_id'))
-                ->where('webhooks.type', '=', 'outgoing')
-                ->where('webhook_events.event', '=', $event->getName())
-                ->fetchAll();
+            if ($webhook_id) {
+                $webhooks = [
+                    $this->Record->select()->from('webhooks')
+                        ->where('webhooks.id', '=', $webhook_id)
+                        ->fetch()
+                ];
+            } else {
+                $webhooks = $this->Record->select()->from('webhooks')
+                    ->innerJoin('webhook_events', 'webhook_events.webhook_id', '=', 'webhooks.id', false)
+                    ->where('webhooks.company_id', '=', Configure::get('Blesta.company_id'))
+                    ->where('webhooks.type', '=', 'outgoing')
+                    ->where('webhook_events.event', '=', $event->getName())
+                    ->fetchAll();
+            }
 
             if ($webhooks) {
                 // Set time limit to 15 minutes
@@ -323,7 +352,11 @@ class WebhooksEvents extends WebhooksModel
                     ];
 
                     // Set request fields
-                    $fields = $this->getFields($webhook->id, (array) $event->getParams());
+                    $params = (array) $event->getParams();
+                    $log_id = $params['log_id'] ?? null;
+                    unset($params['log_id']);
+
+                    $fields = $this->getFields($webhook->id, $params);
 
                     if ($webhook->method == 'get') {
                         $webhook->callback .= empty($fields) ? '' : '?' . http_build_query($fields);
@@ -364,7 +397,22 @@ class WebhooksEvents extends WebhooksModel
                     }
 
                     // Send request
-                    curl_exec($request);
+                    $response = curl_exec($request);
+
+                    // Fetch HTTP code
+                    $http_response = curl_getinfo($request, CURLINFO_HTTP_CODE);
+
+                    // Log webhook
+                    $this->WebhooksLogs->log([
+                        'id' => $log_id,
+                        'webhook_id' => $webhook->id,
+                        'type' => 'outgoing',
+                        'event' => $event->getName(),
+                        'fields' => (array) $fields,
+                        'response' => $response,
+                        'http_response' => $http_response
+                    ]);
+
                     curl_close($request);
                 }
             }
