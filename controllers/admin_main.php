@@ -6,7 +6,7 @@ use Blesta\Core\Util\Input\Fields\InputFields;
  * Webhooks main controller
  *
  * @package blesta
- * @subpackage blesta.plugins.webhooks
+ * @subpackage plugins.webhooks
  * @copyright Copyright (c) 2023, Phillips Data, Inc.
  * @license http://www.blesta.com/license/ The Blesta License Agreement
  * @link http://www.blesta.com/ Blesta
