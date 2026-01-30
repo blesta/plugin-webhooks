@@ -15,8 +15,8 @@ $links = [
 ];
 $link_buttons = [
     [
-        'icon' => 'bi bi-plus-lg',
-        'name' => '',
+        'icon' => 'bi bi-plus-lg me-1',
+        'name' => $this->_('AdminMain.index.categorylink_addwebhook', true),
         'attributes' => [
             'title' => $this->_('AdminMain.index.categorylink_addwebhook', true),
             'href' => $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/add/')
