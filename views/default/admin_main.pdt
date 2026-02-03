@@ -96,7 +96,15 @@ if (($webhooks ?? false) && ($num_tickets = count($webhooks)) > 0) {
     </tbody>
 </table>
 <?php
-    $this->Pagination->build();
+if (isset($this->Pagination) && $this->Pagination->hasPages()) {
+    ?>
+    <div class="card-footer">
+        <?php $this->Pagination->build();?>
+    </div>
+    <?php
+}
+?>
+<?php
 } else {
 ?>
 <div class="card-body text-center text-muted py-5">
