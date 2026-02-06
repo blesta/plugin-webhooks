@@ -108,7 +108,8 @@ $this->Widget->create($this->_('AdminMain.add.boxtitle_addwebhook', true));
         </tbody>
     </table>
 </div>
-<div class="card-footer d-flex justify-content-end gap-2">
+<?php $this->Widget->footer(); ?>
+<div class="d-flex justify-content-end gap-2">
     <a class="btn btn-secondary" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/');?>"><?php $this->_('AdminMain.add.field_cancel');?></a>
     <?php
     $this->Form->fieldSubmit('save', $this->_('AdminMain.add.field_addsubmit', true), ['class' => 'btn btn-primary float-end']);

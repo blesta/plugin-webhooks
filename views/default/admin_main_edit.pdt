@@ -108,7 +108,8 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true));
         </tbody>
     </table>
 </div>
-<div class="card-footer">
+<?php $this->Widget->footer(); ?>
+<div>
     <a class="btn btn-secondary" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/');?>"><?php $this->_('AdminMain.edit.field_cancel');?></a>
     <?php
     $this->Form->fieldSubmit('save', $this->_('AdminMain.edit.field_editsubmit', true), ['class' => 'btn btn-primary float-end']);
