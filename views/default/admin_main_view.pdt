@@ -5,7 +5,7 @@ echo ($message ?? null);
 
 $this->Widget->clear();
 $this->Widget->setBodyWrapper(false);
-$this->Widget->create($this->_('AdminMain.view.boxtitle_viewwebhook', true), ['id' => 'admin_main_view'], (isset($render_section) ? $render_section : null));
+$this->Widget->create($this->_('AdminMain.view.boxtitle_viewwebhook', true), ['id' => 'admin_main_view'], ($render_section ?? null));
 ?>
 <div class="card-body">
     <div class="row">
@@ -112,7 +112,9 @@ $this->Widget->create($this->_('AdminMain.view.boxtitle_viewwebhook', true), ['i
                         $this->Form->create($this->base_uri . 'plugin/webhooks/admin_main/retry/', ['class' => 'd-inline']);
                         $this->Form->fieldHidden('id', ($log->id ?? null));
                         ?>
-                        <button type="button" class="btn btn-link btn-sm p-0 modal-confirm-delete" data-confirm-message="<?php echo $this->Html->safe($this->_('AdminMain.view.confirm_retry', true));?>"><?php $this->_('AdminMain.view.option_retry');?></button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary modal-confirm" data-confirm-message="<?php echo $this->Html->safe($this->_('AdminMain.view.confirm_retry', true));?>" title="<?php $this->_('AdminMain.view.option_retry');?>">
+                            <i class="bi bi-arrow-repeat"></i>
+                        </button>
                         <?php
                         $this->Form->end();
                         ?>
@@ -123,8 +125,11 @@ $this->Widget->create($this->_('AdminMain.view.boxtitle_viewwebhook', true), ['i
             ?>
         </tbody>
     </table>
-    <?php
-    $this->Pagination->build();
-    ?>
 </div>
-<?php $this->Widget->end();?>
+<?php
+if (isset($this->Pagination) && $this->Pagination->hasPages()) {
+    $this->Widget->footer();
+    $this->Pagination->build();
+}
+$this->Widget->end();
+?>

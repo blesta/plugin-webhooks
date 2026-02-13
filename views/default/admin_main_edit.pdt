@@ -3,17 +3,18 @@
 <?php
 echo ($message ?? null);
 
+$this->Form->create(null, ['id' => 'webhook', 'class' => 'disable-on-submit']);
+
 $this->Widget->clear();
 $this->Widget->setBodyWrapper(false);
-$this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true));
+$this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true), [], ($render_section ?? null));
 ?>
-<?php $this->Form->create(null, ['id' => 'webhook', 'class' => 'disable-on-submit']);?>
 <div class="card-body">
     <h6 class="form-section-header"><?php $this->_('AdminMain.edit.heading_event');?></h6>
 
     <div class="mb-3">
         <?php
-        $this->Form->label($this->_('AdminMain.edit.field_callback', true), 'callback');
+        $this->Form->label($this->_('AdminMain.edit.field_callback', true), 'callback', ['class' => 'form-label']);
         ?>
         <div class="d-flex align-items-center">
             <label class="mb-0 me-1 callback_url"><?php echo $this->Html->safe('http://' . Configure::get('Blesta.company')->hostname . $this->base_uri . 'plugin/webhooks/trigger/index/');?></label>
@@ -26,7 +27,7 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true));
 
     <div class="mb-3">
         <?php
-        $this->Form->label($this->_('AdminMain.edit.field_event', true), 'event');
+        $this->Form->label($this->_('AdminMain.edit.field_event', true), 'event', ['class' => 'form-label']);
         ?>
         <div class="row">
             <?php
@@ -48,14 +49,14 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true));
 
     <div class="mb-3">
         <?php
-        $this->Form->label($this->_('AdminMain.edit.field_type', true), 'type');
+        $this->Form->label($this->_('AdminMain.edit.field_type', true), 'type', ['class' => 'form-label']);
         $this->Form->fieldSelect('type', ($types ?? null), ($vars->type ?? null), ['id' => 'type', 'class' => 'form-select']);
         ?>
     </div>
 
     <div class="mb-3">
         <?php
-        $this->Form->label($this->_('AdminMain.edit.field_method', true), 'method');
+        $this->Form->label($this->_('AdminMain.edit.field_method', true), 'method', ['class' => 'form-label']);
         $this->Form->fieldSelect('method', ($methods ?? null), ($vars->method ?? null), ['id' => 'method', 'class' => 'form-select']);
         ?>
     </div>
@@ -97,7 +98,7 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true));
                         ?>
                     </td>
                     <td>
-                        <a class="btn btn-link btn-sm p-0 text-danger field_row_delete" href="#"><?php $this->_('AdminMain.edit.option_delete');?></a>
+                        <a class="btn btn-outline-danger btn-sm field_row_delete" href="#" title="<?php $this->_('AdminMain.edit.option_delete');?>"><i class="bi bi-trash"></i></a>
                     </td>
                 </tr>
             <?php
@@ -109,14 +110,16 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true));
     </table>
 </div>
 <?php $this->Widget->footer(); ?>
-<div>
+<div class="d-flex justify-content-end gap-2">
     <a class="btn btn-secondary" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/');?>"><?php $this->_('AdminMain.edit.field_cancel');?></a>
     <?php
-    $this->Form->fieldSubmit('save', $this->_('AdminMain.edit.field_editsubmit', true), ['class' => 'btn btn-primary float-end']);
+    $this->Form->fieldSubmit('save', $this->_('AdminMain.edit.field_editsubmit', true), ['class' => 'btn btn-primary']);
     ?>
 </div>
-<?php $this->Form->end();?>
-<?php $this->Widget->end();?>
+<?php
+$this->Widget->end();
+$this->Form->end();
+?>
 
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {

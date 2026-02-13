@@ -17,16 +17,16 @@ $links = [
 ];
 $link_buttons = [
     [
-        'icon' => 'bi bi-plus-lg me-1',
-        'name' => $this->_('AdminMain.index.categorylink_addwebhook', true),
+        'icon' => 'bi bi-plus-lg',
+        'name' => '',
         'attributes' => [
             'title' => $this->_('AdminMain.index.categorylink_addwebhook', true),
             'href' => $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/add/')
         ]
     ],
     [
-        'icon' => 'bi bi-list me-1',
-        'name' => $this->_('AdminMain.index.categorylink_viewlogs', true),
+        'icon' => 'bi bi-journal-text',
+        'name' => '',
         'attributes' => [
             'title' => $this->_('AdminMain.index.categorylink_viewlogs', true),
             'href' => $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/')
@@ -42,12 +42,27 @@ $this->Widget->create($this->_('AdminMain.index.boxtitle_webhooks', true), ['id'
 
 if (($webhooks ?? false) && ($num_tickets = count($webhooks)) > 0) {
 ?>
-<table class="table table-hover" id="webhook_list">
+<div class="table-responsive">
+<table class="table table-hover mb-0" id="webhook_list">
     <thead>
         <tr>
             <th><?php $this->_('AdminMain.index.heading_callback');?></th>
-            <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/index/' . (isset($type) ? $type : null) . '/?sort=event&order=' . ($sort == 'event' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'event' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.index.heading_event');?></a></th>
-            <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/index/' . (isset($type) ? $type : null) . '/?sort=method&order=' . ($sort == 'method' ? $negate_order : $order));?>" class="ajax<?php echo $this->Html->safe($sort == 'method' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.index.heading_method');?></a></th>
+            <th>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/index/' . ($type ?? null) . '/?sort=event&order=' . ($sort == 'event' ? $negate_order : $order));?>" class="ajax text-decoration-none">
+                    <?php $this->_('AdminMain.index.heading_event');?>
+                    <?php if ($sort == 'event') { ?>
+                        <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i>
+                    <?php } ?>
+                </a>
+            </th>
+            <th>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/index/' . ($type ?? null) . '/?sort=method&order=' . ($sort == 'method' ? $negate_order : $order));?>" class="ajax text-decoration-none">
+                    <?php $this->_('AdminMain.index.heading_method');?>
+                    <?php if ($sort == 'method') { ?>
+                        <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i>
+                    <?php } ?>
+                </a>
+            </th>
             <th><?php $this->_('AdminMain.index.heading_options');?></th>
         </tr>
     </thead>
@@ -76,14 +91,20 @@ if (($webhooks ?? false) && ($num_tickets = count($webhooks)) > 0) {
             </td>
             <td><?php echo $this->Html->safe(strtoupper($webhook->method ?? ''));?></td>
             <td>
-                <div class="d-flex gap-1">
-                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?filters[webhook_id]=' . $webhook->id);?>" class="btn btn-sm btn-outline-secondary"><?php $this->_('AdminMain.index.option_logs');?></a>
-                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/edit/' . $webhook->id);?>" class="btn btn-sm btn-outline-secondary"><?php $this->_('AdminMain.index.option_edit');?></a>
+                <div class="d-flex gap-2">
+                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?filters[webhook_id]=' . $webhook->id);?>" class="btn btn-sm btn-outline-secondary" title="<?php $this->_('AdminMain.index.option_logs');?>">
+                        <i class="bi bi-journal-text"></i>
+                    </a>
+                    <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/edit/' . $webhook->id);?>" class="btn btn-sm btn-outline-secondary" title="<?php $this->_('AdminMain.index.option_edit');?>">
+                        <i class="bi bi-pencil"></i>
+                    </a>
                     <?php
                     $this->Form->create($this->base_uri . 'plugin/webhooks/admin_main/delete/', ['class' => 'd-inline']);
                     $this->Form->fieldHidden('id', ($webhook->id ?? null));
                     ?>
-                    <button type="button" class="btn btn-sm btn-outline-danger modal-confirm-delete" data-confirm-message="<?php $this->_('AdminMain.modal.delete_text');?>"><?php $this->_('AdminMain.index.option_delete');?></button>
+                    <button type="button" class="btn btn-sm btn-outline-danger modal-confirm-delete" data-confirm-message="<?php echo $this->Html->safe($this->_('AdminMain.modal.delete_text', true));?>" title="<?php $this->_('AdminMain.index.option_delete');?>">
+                        <i class="bi bi-trash"></i>
+                    </button>
                     <?php
                     $this->Form->end();
                     ?>
@@ -95,6 +116,7 @@ if (($webhooks ?? false) && ($num_tickets = count($webhooks)) > 0) {
         ?>
     </tbody>
 </table>
+</div>
 <?php
 if (isset($this->Pagination) && $this->Pagination->hasPages()) {
     $this->Widget->footer();

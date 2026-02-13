@@ -3,11 +3,12 @@
 <?php
 echo ($message ?? null);
 
+$this->Form->create(null, ['id' => 'webhook', 'class' => 'disable-on-submit']);
+
 $this->Widget->clear();
 $this->Widget->setBodyWrapper(false);
-$this->Widget->create($this->_('AdminMain.add.boxtitle_addwebhook', true));
+$this->Widget->create($this->_('AdminMain.add.boxtitle_addwebhook', true), [], ($render_section ?? null));
 ?>
-<?php $this->Form->create(null, ['id' => 'webhook', 'class' => 'disable-on-submit']);?>
 <div class="card-body">
     <h6 class="form-section-header"><?php $this->_('AdminMain.add.heading_event');?></h6>
 
@@ -97,7 +98,7 @@ $this->Widget->create($this->_('AdminMain.add.boxtitle_addwebhook', true));
                         ?>
                     </td>
                     <td>
-                        <a class="btn btn-outline-danger btn-sm field_row_delete" href="#"><?php $this->_('AdminMain.add.option_delete');?></a>
+                        <a class="btn btn-outline-danger btn-sm field_row_delete" href="#" title="<?php $this->_('AdminMain.add.option_delete');?>"><i class="bi bi-trash"></i></a>
                     </td>
                 </tr>
             <?php
@@ -112,11 +113,13 @@ $this->Widget->create($this->_('AdminMain.add.boxtitle_addwebhook', true));
 <div class="d-flex justify-content-end gap-2">
     <a class="btn btn-secondary" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/');?>"><?php $this->_('AdminMain.add.field_cancel');?></a>
     <?php
-    $this->Form->fieldSubmit('save', $this->_('AdminMain.add.field_addsubmit', true), ['class' => 'btn btn-primary float-end']);
+    $this->Form->fieldSubmit('save', $this->_('AdminMain.add.field_addsubmit', true), ['class' => 'btn btn-primary']);
     ?>
 </div>
-<?php $this->Form->end();?>
-<?php $this->Widget->end();?>
+<?php
+$this->Widget->end();
+$this->Form->end();
+?>
 
 <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {

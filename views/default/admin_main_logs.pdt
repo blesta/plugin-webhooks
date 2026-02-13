@@ -22,15 +22,37 @@ $this->Widget->create($this->_('AdminMain.logs.boxtitle_logs', true), ['id' => '
 
 if (($logs ?? false) && count($logs) > 0) {
 ?>
-<table class="table table-hover" id="logs_list">
+<div class="table-responsive">
+<table class="table table-hover mb-0" id="logs_list">
     <thead>
         <tr>
             <th><?php $this->_('AdminMain.logs.heading_webhook');?></th>
-            <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=event&order=' . ($sort == 'event' ? $negate_order : $order) . '&' . http_build_query($filters ?? []));?>" class="ajax<?php echo $this->Html->safe($sort == 'event' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.logs.heading_event');?></a></th>
+            <th>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=event&order=' . ($sort == 'event' ? $negate_order : $order) . '&' . http_build_query($filters ?? []));?>" class="ajax text-decoration-none">
+                    <?php $this->_('AdminMain.logs.heading_event');?>
+                    <?php if ($sort == 'event') { ?>
+                        <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i>
+                    <?php } ?>
+                </a>
+            </th>
             <th><?php $this->_('AdminMain.logs.heading_response');?></th>
             <th><?php $this->_('AdminMain.logs.heading_method');?></th>
-            <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=http_response&order=' . ($sort == 'http_response' ? $negate_order : $order) . '&' . http_build_query($filters ?? []));?>" class="ajax<?php echo $this->Html->safe($sort == 'http_response' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.logs.heading_http_response');?></a></th>
-            <th><a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=date_triggered&order=' . ($sort == 'date_triggered' ? $negate_order : $order) . '&' . http_build_query($filters ?? []));?>" class="ajax<?php echo $this->Html->safe($sort == 'date_triggered' ? ' ' . $order : '');?>"><?php $this->_('AdminMain.logs.heading_date_triggered');?></a></th>
+            <th>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=http_response&order=' . ($sort == 'http_response' ? $negate_order : $order) . '&' . http_build_query($filters ?? []));?>" class="ajax text-decoration-none">
+                    <?php $this->_('AdminMain.logs.heading_http_response');?>
+                    <?php if ($sort == 'http_response') { ?>
+                        <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i>
+                    <?php } ?>
+                </a>
+            </th>
+            <th>
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=date_triggered&order=' . ($sort == 'date_triggered' ? $negate_order : $order) . '&' . http_build_query($filters ?? []));?>" class="ajax text-decoration-none">
+                    <?php $this->_('AdminMain.logs.heading_date_triggered');?>
+                    <?php if ($sort == 'date_triggered') { ?>
+                        <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i>
+                    <?php } ?>
+                </a>
+            </th>
             <th><?php $this->_('AdminMain.logs.heading_date_last_retry');?></th>
             <th><?php $this->_('AdminMain.logs.heading_options');?></th>
         </tr>
@@ -58,7 +80,9 @@ if (($logs ?? false) && count($logs) > 0) {
                 $this->Form->create($this->base_uri . 'plugin/webhooks/admin_main/retry/', ['class' => 'd-inline']);
                 $this->Form->fieldHidden('id', ($log->id ?? null));
                 ?>
-                <button type="button" class="btn btn-link btn-sm p-0 modal-confirm-delete" data-confirm-message="<?php echo $this->Html->safe($this->_('AdminMain.logs.confirm_resend', true));?>"><?php $this->_('AdminMain.logs.option_resend');?></button>
+                <button type="button" class="btn btn-sm btn-outline-secondary modal-confirm" data-confirm-message="<?php echo $this->Html->safe($this->_('AdminMain.logs.confirm_resend', true));?>" title="<?php $this->_('AdminMain.logs.option_resend');?>">
+                    <i class="bi bi-arrow-repeat"></i>
+                </button>
                 <?php
                 $this->Form->end();
                 ?>
@@ -69,8 +93,12 @@ if (($logs ?? false) && count($logs) > 0) {
         ?>
     </tbody>
 </table>
+</div>
 <?php
-    $this->Pagination->build();
+    if (isset($this->Pagination) && $this->Pagination->hasPages()) {
+        $this->Widget->footer();
+        $this->Pagination->build();
+    }
 } else {
 ?>
 <div class="card-body text-center text-muted py-5">
