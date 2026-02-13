@@ -1,180 +1,177 @@
+<?php /** @var View $this */ ?>
+
 <?php
 echo ($message ?? null);
 
+$this->Form->create(null, ['id' => 'webhook', 'class' => 'disable-on-submit']);
+
 $this->Widget->clear();
-$this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true));
+$this->Widget->setBodyWrapper(false);
+$this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true), [], ($render_section ?? null));
 ?>
-    <div class="inner">
-        <?php $this->Form->create(null, ['id' => 'webhook', 'class' => 'disable-on-submit']);?>
-        <div class="title_row first">
-            <h3><?php $this->_('AdminMain.edit.heading_event');?></h3>
-        </div>
-        <div class="pad">
-            <ul>
-                <li>
-                    <?php
-                    $this->Form->label($this->_('AdminMain.edit.field_callback', true), 'callback');
-                    ?>
-                    <div>
-                        <?php
-                        $this->Form->label($this->Html->safe('http://' . Configure::get('Blesta.company')->hostname . $this->base_uri . 'plugin/webhooks/trigger/index/'), null, ['class' => 'inline callback_url']);
-                        $this->Form->fieldText('callback', ($vars->callback ?? null), ['id' => 'callback', 'class' => 'inline']);
-                        ?>
-                        <span class="tooltip"><?php $this->_('AppController.tooltip.text');?><div><?php $this->_('AdminMain.!tooltip.callback');?></div></span>
-                    </div>
-                </li>
-                <li>
-                    <?php
-                    $this->Form->label($this->_('AdminMain.edit.field_event', true), 'event');
-                    ?>
+<div class="card-body">
+    <h6 class="form-section-header"><?php $this->_('AdminMain.edit.heading_event');?></h6>
 
-                    <div class="row">
-                        <?php
-                        foreach ($events ?? [] as $event => $name) {
-                        ?>
-                            <div class="col-md-3">
-                                <div class="p-1">
-                                    <?php
-                                    $this->Form->fieldCheckbox('events[]', $event, in_array($event, $vars->events ?? []), ['id' => 'events_' . $event]);
-                                    $this->Form->label($name, 'events_' . $event, ['class' => 'inline']);
-                                    ?>
-                                </div>
-                            </div>
-                        <?php
-                        }
-                        ?>
-                    </div>
-                </li>
-                <li>
-                    <?php
-                    $this->Form->label($this->_('AdminMain.edit.field_type', true), 'type');
-                    $this->Form->fieldSelect('type', ($types ?? null), ($vars->type ?? null), ['id' => 'type']);
-                    ?>
-                </li>
-                <li>
-                    <?php
-                    $this->Form->label($this->_('AdminMain.edit.field_method', true), 'method');
-                    $this->Form->fieldSelect('method', ($methods ?? null), ($vars->method ?? null), ['id' => 'method']);
-                    ?>
-                </li>
-            </ul>
-        </div>
-
-        <div class="title_row">
-            <h3><?php $this->_('AdminMain.edit.heading_fields_map');?></h3>
-        </div>
-        <div class="pad">
-            <p><?php $this->_('AdminMain.edit.text_fields_map');?></p>
-
-            <div class="links_row">
-                <a class="btn btn-default pull-right btn-sm field_row_add" href="#"><span><?php $this->_('AdminMain.edit.field_add_field');?></span></a>
-            </div>
-
-            <table class="table fields_table">
-                <tr class="heading_row">
-                    <td><?php $this->_('AdminMain.edit.heading_field');?></td>
-                    <td class="last"><?php $this->_('AdminMain.edit.heading_parameter');?></td>
-                    <td class="last"><?php $this->_('AdminMain.edit.heading_options');?></td>
-                </tr>
-                <?php
-                $i = 0;
-                if (empty($vars->fields)) {
-                    $vars->fields = [['field' => null, 'parameter' => null]];
-                }
-
-                foreach ($vars->fields ?? [] as $field) {
-                    $field = (array) $field;
-                ?>
-                    <tr class="field_row<?php echo (($i++%2 == 1) ? ' odd_row' : '');?>">
-                        <td>
-                            <?php
-                            $this->Form->fieldText('fields[' . $i . '][field]', ($field['field'] ?? null), ['class' => 'stretch']);
-                            ?>
-                        </td>
-                        <td>
-                            <?php
-                            $this->Form->fieldText('fields[' . $i . '][parameter]', ($field['parameter'] ?? null), ['class' => 'stretch']);
-                            ?>
-                        </td>
-                        <td>
-                            <a class="manage field_row_delete" href="#"><span><?php $this->_('AdminMain.edit.option_delete');?></span></a>
-                        </td>
-                    </tr>
-                <?php
-                }
-                unset($i);
-                ?>
-            </table>
-        </div>
-
-        <div class="button_row">
+    <div class="mb-3">
+        <?php
+        $this->Form->label($this->_('AdminMain.edit.field_callback', true), 'callback', ['class' => 'form-label']);
+        ?>
+        <div class="d-flex align-items-center">
+            <label class="mb-0 me-1 callback_url"><?php echo $this->Html->safe('http://' . Configure::get('Blesta.company')->hostname . $this->base_uri . 'plugin/webhooks/trigger/index/');?></label>
             <?php
-            $this->Form->fieldSubmit('save', $this->_('AdminMain.edit.field_editsubmit', true), ['class' => 'btn btn-primary float-right']);
+            $this->Form->fieldText('callback', ($vars->callback ?? null), ['id' => 'callback', 'class' => 'form-control']);
             ?>
-            <a class="btn btn-default float-right" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/');?>"><?php $this->_('AdminMain.edit.field_cancel');?></a>
+            <span class="ms-2" data-bs-toggle="tooltip" data-bs-title="<?php $this->_('AdminMain.!tooltip.callback');?>"><i class="bi bi-info-circle"></i></span>
         </div>
-        <?php $this->Form->end();?>
     </div>
-<?php $this->Widget->end();?>
+
+    <div class="mb-3">
+        <?php
+        $this->Form->label($this->_('AdminMain.edit.field_event', true), 'event', ['class' => 'form-label']);
+        ?>
+        <div class="row">
+            <?php
+            foreach ($events ?? [] as $event => $name) {
+            ?>
+                <div class="col-md-3">
+                    <div class="form-check">
+                        <?php
+                        $this->Form->fieldCheckbox('events[]', $event, in_array($event, $vars->events ?? []), ['id' => 'events_' . $event, 'class' => 'form-check-input']);
+                        $this->Form->label($name, 'events_' . $event, ['class' => 'form-check-label']);
+                        ?>
+                    </div>
+                </div>
+            <?php
+            }
+            ?>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <?php
+        $this->Form->label($this->_('AdminMain.edit.field_type', true), 'type', ['class' => 'form-label']);
+        $this->Form->fieldSelect('type', ($types ?? null), ($vars->type ?? null), ['id' => 'type', 'class' => 'form-select']);
+        ?>
+    </div>
+
+    <div class="mb-3">
+        <?php
+        $this->Form->label($this->_('AdminMain.edit.field_method', true), 'method', ['class' => 'form-label']);
+        $this->Form->fieldSelect('method', ($methods ?? null), ($vars->method ?? null), ['id' => 'method', 'class' => 'form-select']);
+        ?>
+    </div>
+
+    <h6 class="form-section-header"><?php $this->_('AdminMain.edit.heading_fields_map');?></h6>
+    <p><?php $this->_('AdminMain.edit.text_fields_map');?></p>
+
+    <div class="mb-3">
+        <a class="btn btn-outline-secondary btn-sm field_row_add" href="#"><i class="bi bi-plus-lg"></i> <?php $this->_('AdminMain.edit.field_add_field');?></a>
+    </div>
+
+    <table class="table table-hover fields_table">
+        <thead>
+            <tr>
+                <th><?php $this->_('AdminMain.edit.heading_field');?></th>
+                <th><?php $this->_('AdminMain.edit.heading_parameter');?></th>
+                <th><?php $this->_('AdminMain.edit.heading_options');?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php
+            $i = 0;
+            if (empty($vars->fields)) {
+                $vars->fields = [['field' => null, 'parameter' => null]];
+            }
+
+            foreach ($vars->fields ?? [] as $field) {
+                $field = (array) $field;
+            ?>
+                <tr class="field_row">
+                    <td>
+                        <?php
+                        $this->Form->fieldText('fields[' . $i . '][field]', ($field['field'] ?? null), ['class' => 'form-control']);
+                        ?>
+                    </td>
+                    <td>
+                        <?php
+                        $this->Form->fieldText('fields[' . $i . '][parameter]', ($field['parameter'] ?? null), ['class' => 'form-control']);
+                        ?>
+                    </td>
+                    <td>
+                        <a class="btn btn-outline-danger btn-sm field_row_delete" href="#" title="<?php $this->_('AdminMain.edit.option_delete');?>"><i class="bi bi-trash"></i></a>
+                    </td>
+                </tr>
+            <?php
+                $i++;
+            }
+            unset($i);
+            ?>
+        </tbody>
+    </table>
+</div>
+<?php $this->Widget->footer(); ?>
+<div class="d-flex justify-content-end gap-2">
+    <a class="btn btn-secondary" href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/');?>"><?php $this->_('AdminMain.edit.field_cancel');?></a>
+    <?php
+    $this->Form->fieldSubmit('save', $this->_('AdminMain.edit.field_editsubmit', true), ['class' => 'btn btn-primary']);
+    ?>
+</div>
+<?php
+$this->Widget->end();
+$this->Form->end();
+?>
 
 <script type="text/javascript">
-    $(document).ready(function() {
-        $('.field_row_add').click(function() {
-            addFieldRow();
-            updateZebraStriping('.field_row');
-        });
+    document.addEventListener('DOMContentLoaded', function() {
+        var add_btn = document.querySelector('.field_row_add');
+        var type_select = document.getElementById('type');
+        var callback_url = document.querySelector('.callback_url');
 
-        $(document).on('click', '.field_row_delete', function() {
-            deleteFieldRow($(this));
-            updateZebraStriping('.field_row');
-        });
+        // Add field row
+        add_btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var table = document.querySelector('table.fields_table tbody');
+            var rows = table.querySelectorAll('tr.field_row');
+            var last_row = rows[rows.length - 1];
+            var new_row = last_row.cloneNode(true);
 
-        if ($('#type').val() == 'incoming') {
-            $('.callback_url').show();
-        } else {
-            $('.callback_url').hide();
-        }
-
-        $('#type').change(function() {
-            if ($(this).val() == 'incoming') {
-                $('.callback_url').show();
-            } else {
-                $('.callback_url').hide();
-            }
-        });
-    });
-
-    function addFieldRow() {
-        var field_row = $('table.fields_table tr.field_row').last().clone();
-        field_row.find('input[type=\"text\"]').val('');
-        $('table.fields_table').append(field_row);
-
-        // Set proper indices
-        var row = 0;
-        $('table.fields_table tr.field_row').each(function() {
-            $(this).find('input').each(function() {
-                $(this).prop('name', $(this).prop('name').replace(/(\[\d+\])/, '[' + row + ']'));
-                $(this).prop('name', $(this).prop('name').replace('[]', '[' + row + ']'));
+            // Clear input values
+            new_row.querySelectorAll('input[type="text"]').forEach(function(input) {
+                input.value = '';
             });
 
-            row++;
-        });
-    }
+            // Update indices
+            var new_index = rows.length;
+            new_row.querySelectorAll('input').forEach(function(input) {
+                input.name = input.name.replace(/\[\d+\]/, '[' + new_index + ']');
+            });
 
-    function deleteFieldRow(row)
-    {
-        if ($('.field_row').length > 1) {
-            row.parent().parent().remove();
+            table.appendChild(new_row);
+        });
+
+        // Delete field row (delegated)
+        document.querySelector('table.fields_table').addEventListener('click', function(e) {
+            if (e.target.closest('.field_row_delete')) {
+                e.preventDefault();
+                var rows = document.querySelectorAll('tr.field_row');
+                if (rows.length > 1) {
+                    e.target.closest('tr').remove();
+                }
+            }
+        });
+
+        // Type toggle
+        function toggleCallback() {
+            callback_url.style.display = type_select.value === 'incoming' ? '' : 'none';
         }
-    }
 
-    function updateZebraStriping(row) {
-        var i = 0;
-        $(row).each(function() {
-            if (i++%2 == 1)
-                $(this).addClass('odd_row');
-            else
-                $(this).removeClass('odd_row');
+        toggleCallback();
+        type_select.addEventListener('change', toggleCallback);
+
+        // Initialize Bootstrap tooltips
+        var tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltips.forEach(function(el) {
+            new bootstrap.Tooltip(el);
         });
-    }
+    });
 </script>
