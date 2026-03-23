@@ -47,7 +47,7 @@ class WebhooksEvents extends WebhooksModel
             Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
         );
         if ($cache) {
-            $this->observers = unserialize(base64_decode($cache));
+            $this->observers = safe_unserialize(base64_decode($cache));
         }
     }
 
@@ -121,7 +121,7 @@ class WebhooksEvents extends WebhooksModel
             try {
                 Cache::writeCache(
                     'event_observers',
-                    base64_encode(serialize($this->observers)),
+                    base64_encode(safe_serialize($this->observers)),
                     strtotime(Configure::get('Blesta.cache_length')) - time(),
                     Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
                 );
@@ -153,7 +153,7 @@ class WebhooksEvents extends WebhooksModel
         );
 
         if ($installed_plugins) {
-            $installed_plugins = (array) unserialize(base64_decode($installed_plugins));
+            $installed_plugins = (array) safe_unserialize(base64_decode($installed_plugins));
         } else {
             $installed_plugins = $current_plugins;
         }
@@ -161,7 +161,7 @@ class WebhooksEvents extends WebhooksModel
         if (Configure::get('Caching.on') && is_writable(CACHEDIR)) {
             Cache::writeCache(
                 'installed_plugins',
-                base64_encode(serialize($current_plugins)),
+                base64_encode(safe_serialize($current_plugins)),
                 strtotime(Configure::get('Blesta.cache_length')) - time(),
                 Configure::get('Blesta.company_id') . DS . 'plugins' . DS . 'webhooks' . DS
             );
