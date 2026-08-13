@@ -88,7 +88,7 @@ class WebhooksPlugin extends Plugin
         }
 
         // Add cron tasks
-        $this->addCronTasks($this->getCronTasks());
+        $this->addCronTasks($this->getCronTaskDefinitions());
     }
 
     /**
@@ -103,7 +103,7 @@ class WebhooksPlugin extends Plugin
         if (!isset($this->CronTasks)) {
             Loader::loadModels($this, ['CronTasks']);
         }
-        $cron_tasks = $this->getCronTasks();
+        $cron_tasks = $this->getCronTaskDefinitions();
 
         // Remove the tables created by this plugin
         if ($last_instance) {
@@ -189,7 +189,7 @@ class WebhooksPlugin extends Plugin
         $this->Record->query('DROP INDEX `company_id` ON `webhooks`');
 
         // Add cron tasks
-        $this->addCronTasks($this->getCronTasks());
+        $this->addCronTasks($this->getCronTaskDefinitions());
     }
 
     /**
@@ -250,7 +250,7 @@ class WebhooksPlugin extends Plugin
         }
 
         // Add new cleanup_logs cron task
-        $cron_tasks = $this->getCronTasks();
+        $cron_tasks = $this->getCronTaskDefinitions();
         $task = null;
         foreach ($cron_tasks as $cron_task) {
             if ($cron_task['key'] == 'cleanup_logs') {
@@ -398,7 +398,7 @@ class WebhooksPlugin extends Plugin
      *
      * @return array A list of cron tasks
      */
-    private function getCronTasks()
+    public function getCronTaskDefinitions()
     {
         return [
             // Cron task to clear cache
