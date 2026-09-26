@@ -14,6 +14,20 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true), [],
 
     <div class="mb-3">
         <?php
+        $this->Form->label($this->_('AdminMain.edit.field_type', true), 'type', ['class' => 'form-label']);
+        $this->Form->fieldSelect('type', ($types ?? null), ($vars->type ?? null), ['id' => 'type', 'class' => 'form-select']);
+        ?>
+    </div>
+
+    <div class="mb-3">
+        <?php
+        $this->Form->label($this->_('AdminMain.edit.field_method', true), 'method', ['class' => 'form-label']);
+        $this->Form->fieldSelect('method', ($methods ?? null), ($vars->method ?? null), ['id' => 'method', 'class' => 'form-select']);
+        ?>
+    </div>
+
+    <div class="mb-3">
+        <?php
         $this->Form->label($this->_('AdminMain.edit.field_callback', true), 'callback', ['class' => 'form-label']);
         ?>
         <div class="d-flex align-items-center">
@@ -45,20 +59,6 @@ $this->Widget->create($this->_('AdminMain.edit.boxtitle_editwebhook', true), [],
             }
             ?>
         </div>
-    </div>
-
-    <div class="mb-3">
-        <?php
-        $this->Form->label($this->_('AdminMain.edit.field_type', true), 'type', ['class' => 'form-label']);
-        $this->Form->fieldSelect('type', ($types ?? null), ($vars->type ?? null), ['id' => 'type', 'class' => 'form-select']);
-        ?>
-    </div>
-
-    <div class="mb-3">
-        <?php
-        $this->Form->label($this->_('AdminMain.edit.field_method', true), 'method', ['class' => 'form-label']);
-        $this->Form->fieldSelect('method', ($methods ?? null), ($vars->method ?? null), ['id' => 'method', 'class' => 'form-select']);
-        ?>
     </div>
 
     <h6 class="form-section-header"><?php $this->_('AdminMain.edit.heading_fields_map');?></h6>
