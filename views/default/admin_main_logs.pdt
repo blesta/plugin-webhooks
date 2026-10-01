@@ -80,7 +80,7 @@ if (($logs ?? false) && count($logs) > 0) {
                 $this->Form->create($this->base_uri . 'plugin/webhooks/admin_main/retry/', ['class' => 'd-inline']);
                 $this->Form->fieldHidden('id', ($log->id ?? null));
                 ?>
-                <button type="button" class="btn btn-sm btn-outline-secondary modal-confirm" data-confirm-message="<?php echo $this->Html->safe($this->_('AdminMain.logs.confirm_resend', true));?>" title="<?php $this->_('AdminMain.logs.option_resend');?>">
+                <button type="button" class="btn btn-sm btn-outline-secondary modal-confirm-warning" data-confirm-message="<?php echo $this->Html->safe($this->_('AdminMain.logs.confirm_resend', true));?>" title="<?php $this->_('AdminMain.logs.option_resend');?>">
                     <i class="bi bi-arrow-repeat"></i>
                 </button>
                 <?php

@@ -59,24 +59,26 @@ class WebhooksWebhooks extends WebhooksModel
         if (isset($vars['fields']) && is_array($vars['fields'])) {
             foreach ($vars['fields'] as $field) {
                 $field['webhook_id'] = $webhook_id;
-                $this->Record->insert('webhook_events', $field, ['webhook_id', 'field', 'parameter']);
+                $this->Record->insert('webhook_fields', $field, ['webhook_id', 'field', 'parameter']);
             }
         }
 
         // Register event for this webhook
-        if ($vars['type'] = 'outgoing') {
+        if (($vars['type'] ?? null) == 'outgoing') {
             Loader::loadModels($this, ['PluginManager']);
 
             $plugin = $this->PluginManager->getByDir('webhooks', $vars['company_id']);
             $plugin = reset($plugin);
 
-            try {
-                $this->PluginManager->addEvent($plugin->id, [
-                    'event' => $vars['event'],
-                    'callback' => ['this', 'listen']
-                ]);
-            } catch (Throwable $e) {
-                // Nothing to do
+            foreach ($vars['events'] ?? [] as $event) {
+                try {
+                    $this->PluginManager->addEvent($plugin->id, [
+                        'event' => $event,
+                        'callback' => ['this', 'listen']
+                    ]);
+                } catch (Throwable $e) {
+                    // Nothing to do
+                }
             }
         }
 
@@ -139,19 +141,21 @@ class WebhooksWebhooks extends WebhooksModel
         }
 
         // Register event for this webhook
-        if ($vars['type'] = 'outgoing') {
+        if (($vars['type'] ?? null) == 'outgoing') {
             Loader::loadModels($this, ['PluginManager']);
 
             $plugin = $this->PluginManager->getByDir('webhooks', $vars['company_id']);
             $plugin = reset($plugin);
 
-            try {
-                $this->PluginManager->addEvent($plugin->id, [
-                    'event' => $vars['event'],
-                    'callback' => ['this', 'listen']
-                ]);
-            } catch (Throwable $e) {
-                // Nothing to do
+            foreach ($vars['events'] ?? [] as $event) {
+                try {
+                    $this->PluginManager->addEvent($plugin->id, [
+                        'event' => $event,
+                        'callback' => ['this', 'listen']
+                    ]);
+                } catch (Throwable $e) {
+                    // Nothing to do
+                }
             }
         }
 
