@@ -27,7 +27,6 @@ class AdminMain extends WebhooksController
             'Webhooks.WebhooksLogs'
         ]);
         $this->helpers(['Form']);
-        $this->components(['SettingsCollection']);
 
         $this->structure->set(
             'page_title',
@@ -98,6 +97,8 @@ class AdminMain extends WebhooksController
 
         // Add webhook
         if (!empty($this->post)) {
+            // A webhook always belongs to the current company, whatever was submitted
+            $this->post['company_id'] = $this->company_id;
             $this->WebhooksWebhooks->add($this->post);
 
             if (($errors = $this->WebhooksWebhooks->errors())) {
@@ -122,8 +123,10 @@ class AdminMain extends WebhooksController
      */
     public function edit()
     {
-        $webhook_id = (isset($this->get[0]) ? $this->get[0] : null);
-        if (!($webhook = $this->WebhooksWebhooks->get($webhook_id))) {
+        $webhook_id = (int) ($this->get[0] ?? 0);
+        if (!($webhook = $this->WebhooksWebhooks->get($webhook_id))
+            || $this->company_id != $webhook->company_id
+        ) {
             $this->redirect($this->base_uri . 'plugin/webhooks/admin_main/');
         }
 
@@ -139,6 +142,8 @@ class AdminMain extends WebhooksController
         // Update webhook
         $vars = (object) $webhook;
         if (!empty($this->post)) {
+            // A webhook always belongs to the current company, whatever was submitted
+            $this->post['company_id'] = $this->company_id;
             $this->WebhooksWebhooks->edit($webhook_id, $this->post);
 
             if (($errors = $this->WebhooksWebhooks->errors())) {
@@ -218,11 +223,8 @@ class AdminMain extends WebhooksController
             }
         }
 
-        // Get company settings
-        $company_settings = $this->SettingsCollection->fetchSettings($this->Companies, $this->company_id);
-
         // Get all webhooks for filter dropdown
-        $webhooks = $this->WebhooksWebhooks->getAll();
+        $webhooks = $this->WebhooksWebhooks->getAll(null);
 
         // Get logs
         $logs = $this->WebhooksLogs->getAllLogs($post_filters, $page, [$sort => $order]);
@@ -241,13 +243,6 @@ class AdminMain extends WebhooksController
             ]
         );
         $this->setPagination($this->get, $settings);
-
-        // Load date picker
-        $this->Javascript->setFile('date.min.js');
-        $this->Javascript->setFile('jquery.datePicker.min.js');
-        $this->Javascript->setInline(
-            'Date.firstDayOfWeek=' . ($company_settings['calendar_begins'] == 'sunday' ? 0 : 1) . ';'
-        );
 
         // Set the input field filters for the widget
         $filters = $this->getLogsFilters($post_filters, $webhooks);
@@ -288,7 +283,7 @@ class AdminMain extends WebhooksController
                 'filters[webhook_id]',
                 $webhook_options,
                 isset($vars['webhook_id']) ? $vars['webhook_id'] : null,
-                ['class' => 'w-100', 'id' => 'webhook_id']
+                ['class' => 'form-select', 'id' => 'webhook_id']
             )
         );
         $filters->setField($webhook);
@@ -305,7 +300,7 @@ class AdminMain extends WebhooksController
                 'filters[event]',
                 $events,
                 isset($vars['event']) ? $vars['event'] : null,
-                ['class' => 'w-100', 'id' => 'webhook_id']
+                ['class' => 'form-select', 'id' => 'event']
             )
         );
         $filters->setField($event);
@@ -320,7 +315,7 @@ class AdminMain extends WebhooksController
                 'filters[http_response]',
                 isset($vars['http_response']) ? $vars['http_response'] : null,
                 [
-                    'class' => 'stretch',
+                    'class' => 'form-control',
                     'id' => 'http_response',
                     'placeholder' => Language::_('AdminMain.logs.field_filterhttpstatus', true)
                 ]
@@ -339,7 +334,7 @@ class AdminMain extends WebhooksController
                 isset($vars['date_start']) ? $vars['date_start'] : null,
                 [
                     'id' => 'date_start',
-                    'class' => 'date',
+                    'class' => 'form-control date',
                     'placeholder' => 'YYYY-MM-DD'
                 ]
             )
@@ -357,7 +352,7 @@ class AdminMain extends WebhooksController
                 isset($vars['date_end']) ? $vars['date_end'] : null,
                 [
                     'id' => 'date_end',
-                    'class' => 'date',
+                    'class' => 'form-control date',
                     'placeholder' => 'YYYY-MM-DD'
                 ]
             )

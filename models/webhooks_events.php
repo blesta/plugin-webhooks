@@ -238,10 +238,12 @@ class WebhooksEvents extends WebhooksModel
      * @param int $webhook_id The ID of the webhook to trigger the event
      * @param array $params An array of parameters to be held by this event (optional)
      * @param array $events The events to be triggered by the incoming webhook (optional)
+     * @param bool $map_fields Whether to apply the field mapping of the webhook to the parameters (optional,
+     *  default true), a retried log already holds the mapped fields
      * @return array The list of parameters that were submitted along with any modifications made to them
      *  by the event handlers. In addition a __return__ item is included with the return array from the event.
      */
-    public function trigger(int $webhook_id, array $params = [], array $events = null)
+    public function trigger(int $webhook_id, array $params = [], array $events = null, bool $map_fields = true)
     {
         // Get webhook
         Loader::loadModels($this, ['Webhooks.WebhooksWebhooks']);
@@ -253,6 +255,13 @@ class WebhooksEvents extends WebhooksModel
             $webhook->events = $events;
         }
 
+        // Format parameters once, so the mapping is not applied again for every event
+        if ($map_fields) {
+            $params = $this->getFields($webhook->id, $params);
+        }
+        $log_id = $params['log_id'] ?? null;
+        unset($params['log_id']);
+
         // Process webhook events
         $return = [];
         foreach ($webhook->events as $event) {
@@ -260,11 +269,6 @@ class WebhooksEvents extends WebhooksModel
             if (!in_array($event, $all_events)) {
                 continue;
             }
-
-            // Format parameters
-            $params = $this->getFields($webhook->id, $params);
-            $log_id = $params['log_id'] ?? null;
-            unset($params['log_id']);
 
             // Get the observer of the event
             $observers = $this->getObservers();
@@ -317,7 +321,8 @@ class WebhooksEvents extends WebhooksModel
      * Listens to all events and triggers outgoing webhooks
      *
      * @param EventInterface $event The triggered event
-     * @param int $webhook_id The ID of the webhook used to trigger the event (optional)
+     * @param int $webhook_id The ID of the webhook to run (optional), set when retrying a logged request
+     *  whose fields are already mapped
      */
     public function listen(EventInterface $event, int $webhook_id = null)
     {
@@ -356,7 +361,7 @@ class WebhooksEvents extends WebhooksModel
                     $log_id = $params['log_id'] ?? null;
                     unset($params['log_id']);
 
-                    $fields = $this->getFields($webhook->id, $params);
+                    $fields = ($webhook_id ? $params : $this->getFields($webhook->id, $params));
 
                     if ($webhook->method == 'get') {
                         $webhook->callback .= empty($fields) ? '' : '?' . http_build_query($fields);

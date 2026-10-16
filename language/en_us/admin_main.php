@@ -46,12 +46,12 @@ $lang['AdminMain.add.heading_options'] = 'Actions';
 $lang['AdminMain.add.option_delete'] = 'Delete';
 $lang['AdminMain.add.field_callback'] = 'Callback';
 $lang['AdminMain.add.field_event'] = 'Event';
-$lang['AdminMain.add.field_type'] = 'Callback';
+$lang['AdminMain.add.field_type'] = 'Type';
 $lang['AdminMain.add.field_method'] = 'Method';
 $lang['AdminMain.add.field_add_field'] = 'Add Field';
 $lang['AdminMain.add.field_addsubmit'] = 'Add Webhook';
 $lang['AdminMain.add.field_cancel'] = 'Cancel';
-$lang['AdminMain.add.text_fields_map'] = 'This section allows you to rename the name of the fields of the event being triggered to a custom name before they are sent to the callback. Subfields should be separated by a period (e.g. vars.status). To see a list of all the fields supported by each one of the events, you can check the following <a href="https://docs.blesta.com/display/dev/Event+Handlers" target="_blank">link</a>.';
+$lang['AdminMain.add.text_fields_map'] = 'This section allows you to rename the name of the fields of the event being triggered to a custom name before they are sent to the callback. Subfields should be separated by a period (e.g. vars.status). To see a list of all the fields supported by each one of the events, you can check the following <a href="https://docs.blesta.com/developers/events/event-handlers/" target="_blank">link</a>.';
 
 
 // Edit webhook
@@ -64,12 +64,12 @@ $lang['AdminMain.edit.heading_options'] = 'Actions';
 $lang['AdminMain.edit.option_delete'] = 'Delete';
 $lang['AdminMain.edit.field_callback'] = 'Callback';
 $lang['AdminMain.edit.field_event'] = 'Event';
-$lang['AdminMain.edit.field_type'] = 'Callback';
+$lang['AdminMain.edit.field_type'] = 'Type';
 $lang['AdminMain.edit.field_method'] = 'Method';
 $lang['AdminMain.edit.field_add_field'] = 'Add Field';
 $lang['AdminMain.edit.field_editsubmit'] = 'Edit Webhook';
 $lang['AdminMain.edit.field_cancel'] = 'Cancel';
-$lang['AdminMain.edit.text_fields_map'] = 'This section allows you to rename the name of the fields of the event being triggered to a custom name before they are sent to the callback. Subfields should be separated by a period (e.g. vars.status). To see a list of all the fields supported by each one of the events, you can check the following <a href="https://docs.blesta.com/display/dev/Event+Handlers" target="_blank">link</a>.';
+$lang['AdminMain.edit.text_fields_map'] = 'This section allows you to rename the name of the fields of the event being triggered to a custom name before they are sent to the callback. Subfields should be separated by a period (e.g. vars.status). To see a list of all the fields supported by each one of the events, you can check the following <a href="https://docs.blesta.com/developers/events/event-handlers/" target="_blank">link</a>.';
 
 
 // Logs
