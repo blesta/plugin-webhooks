@@ -28,7 +28,7 @@ if (($logs ?? false) && count($logs) > 0) {
         <tr>
             <th><?php $this->_('AdminMain.logs.heading_webhook');?></th>
             <th>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=event&order=' . ($sort == 'event' ? $negate_order : $order) . '&' . http_build_query($filters ?? []));?>" class="ajax text-decoration-none">
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=event&order=' . ($sort == 'event' ? $negate_order : $order) . '&' . http_build_query(['filters' => ($filter_vars ?? [])]));?>" class="ajax text-decoration-none">
                     <?php $this->_('AdminMain.logs.heading_event');?>
                     <?php if ($sort == 'event') { ?>
                         <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i>
@@ -38,7 +38,7 @@ if (($logs ?? false) && count($logs) > 0) {
             <th><?php $this->_('AdminMain.logs.heading_response');?></th>
             <th><?php $this->_('AdminMain.logs.heading_method');?></th>
             <th>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=http_response&order=' . ($sort == 'http_response' ? $negate_order : $order) . '&' . http_build_query($filters ?? []));?>" class="ajax text-decoration-none">
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=http_response&order=' . ($sort == 'http_response' ? $negate_order : $order) . '&' . http_build_query(['filters' => ($filter_vars ?? [])]));?>" class="ajax text-decoration-none">
                     <?php $this->_('AdminMain.logs.heading_http_response');?>
                     <?php if ($sort == 'http_response') { ?>
                         <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i>
@@ -46,7 +46,7 @@ if (($logs ?? false) && count($logs) > 0) {
                 </a>
             </th>
             <th>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=date_triggered&order=' . ($sort == 'date_triggered' ? $negate_order : $order) . '&' . http_build_query($filters ?? []));?>" class="ajax text-decoration-none">
+                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/logs/?sort=date_triggered&order=' . ($sort == 'date_triggered' ? $negate_order : $order) . '&' . http_build_query(['filters' => ($filter_vars ?? [])]));?>" class="ajax text-decoration-none">
                     <?php $this->_('AdminMain.logs.heading_date_triggered');?>
                     <?php if ($sort == 'date_triggered') { ?>
                         <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i>
@@ -110,12 +110,3 @@ if (($logs ?? false) && count($logs) > 0) {
 
 $this->Widget->end();
 ?>
-
-<script type="text/javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        // Date picker initialization (Blesta core widget)
-        if (typeof jQuery !== 'undefined') {
-            jQuery('#date_start, #date_end').datePicker({startDate:'1996-01-01'});
-        }
-    });
-</script>

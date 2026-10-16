@@ -103,14 +103,14 @@ class WebhooksWebhooks extends WebhooksModel
      */
     public function edit(int $webhook_id, array $vars)
     {
-        // Validate fields
-        $this->Input->setRules($this->getRules($vars, true));
-        if (!$this->Input->validates($vars)) {
-            return;
-        }
-
         if (!isset($vars['company_id'])) {
             $vars['company_id'] = Configure::get('Blesta.company_id');
+        }
+
+        // Validate fields
+        $this->Input->setRules($this->getRules($vars, true, $webhook_id));
+        if (!$this->Input->validates($vars)) {
+            return;
         }
 
         // Update the webhook
@@ -182,9 +182,10 @@ class WebhooksWebhooks extends WebhooksModel
      *
      * @param array $vars An array of input fields
      * @param bool $edit Whether or not this is an edit request
+     * @param int $webhook_id The ID of the webhook being edited, excluded from the callback uniqueness check (optional)
      * @return array The rules
      */
-    private function getRules(array &$vars, bool $edit = false)
+    private function getRules(array &$vars, bool $edit = false, int $webhook_id = null)
     {
         $rules = [
             'company_id' => [
@@ -196,21 +197,24 @@ class WebhooksWebhooks extends WebhooksModel
             'callback' => [
                 'exists' => [
                     'rule' => [
-                        function ($callback, $type) use ($vars) {
+                        function ($callback, $type) use ($vars, $webhook_id) {
                             // Return false if it is an outgoing webhook
-                            if ($vars['type'] == 'outgoing') {
+                            if (($vars['type'] ?? null) == 'outgoing') {
                                 return false;
                             }
 
                             // Check if another webhook exists with this callback
-                            $webhook = $this->Record->select()
+                            $this->Record->select()
                                 ->from('webhooks')
                                 ->where('company_id', '=', $vars['company_id'] ?? null)
                                 ->where('callback', '=', $callback)
-                                ->where('type', '=', $type)
-                                ->fetchAll();
+                                ->where('type', '=', $type);
 
-                            return count($webhook) > 0;
+                            if ($webhook_id) {
+                                $this->Record->where('id', '!=', $webhook_id);
+                            }
+
+                            return $this->Record->numResults() > 0;
                         },
                         ['_linked' => 'type'],
                     ],
@@ -289,7 +293,7 @@ class WebhooksWebhooks extends WebhooksModel
             $rules['company_id']['exists']['if_set'] = true;
             $rules['callback']['empty']['if_set'] = true;
             $rules['callback']['length']['if_set'] = true;
-            $rules['event']['exists']['if_set'] = true;
+            $rules['events[]']['exists']['if_set'] = true;
             $rules['type']['valid']['if_set'] = true;
             $rules['method']['valid']['if_set'] = true;
 

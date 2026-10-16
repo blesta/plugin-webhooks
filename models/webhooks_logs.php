@@ -42,7 +42,7 @@ class WebhooksLogs extends WebhooksModel
                     $webhook->id
                 );
             } else if ($log->type == 'incoming') {
-                $this->WebhooksEvents->trigger($webhook->id, $params, [$log->event]);
+                $this->WebhooksEvents->trigger($webhook->id, $params, [$log->event], false);
             }
         }
     }
@@ -108,7 +108,8 @@ class WebhooksLogs extends WebhooksModel
     {
         $this->Record->select(['log_webhooks.*', 'webhooks.callback', 'webhooks.method'])
             ->from('log_webhooks')
-            ->innerJoin('webhooks', 'webhooks.id', '=', 'log_webhooks.webhook_id', false);
+            ->innerJoin('webhooks', 'webhooks.id', '=', 'log_webhooks.webhook_id', false)
+            ->where('webhooks.company_id', '=', Configure::get('Blesta.company_id'));
 
         // Apply filters
         if (!empty($filters['webhook_id'])) {
@@ -148,7 +149,8 @@ class WebhooksLogs extends WebhooksModel
     {
         $this->Record->select('log_webhooks.*')
             ->from('log_webhooks')
-            ->innerJoin('webhooks', 'webhooks.id', '=', 'log_webhooks.webhook_id', false);
+            ->innerJoin('webhooks', 'webhooks.id', '=', 'log_webhooks.webhook_id', false)
+            ->where('webhooks.company_id', '=', Configure::get('Blesta.company_id'));
 
         // Apply filters
         if (!empty($filters['webhook_id'])) {

@@ -140,8 +140,15 @@ $this->Form->end();
                 input.value = '';
             });
 
-            // Update indices
-            var new_index = rows.length;
+            // Continue after the highest index in use, so a row deleted earlier does not have its index reused
+            var new_index = 0;
+            rows.forEach(function(row) {
+                var input = row.querySelector('input');
+                var match = input ? input.name.match(/\[(\d+)\]/) : null;
+                if (match && parseInt(match[1], 10) >= new_index) {
+                    new_index = parseInt(match[1], 10) + 1;
+                }
+            });
             new_row.querySelectorAll('input').forEach(function(input) {
                 input.name = input.name.replace(/\[\d+\]/, '[' + new_index + ']');
             });

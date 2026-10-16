@@ -47,14 +47,7 @@ if (($webhooks ?? false) && ($num_tickets = count($webhooks)) > 0) {
     <thead>
         <tr>
             <th><?php $this->_('AdminMain.index.heading_callback');?></th>
-            <th>
-                <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/index/' . ($type ?? null) . '/?sort=event&order=' . ($sort == 'event' ? $negate_order : $order));?>" class="ajax text-decoration-none">
-                    <?php $this->_('AdminMain.index.heading_event');?>
-                    <?php if ($sort == 'event') { ?>
-                        <i class="bi bi-chevron-<?php echo $order == 'asc' ? 'up' : 'down';?>"></i>
-                    <?php } ?>
-                </a>
-            </th>
+            <th><?php $this->_('AdminMain.index.heading_event');?></th>
             <th>
                 <a href="<?php echo $this->Html->safe($this->base_uri . 'plugin/webhooks/admin_main/index/' . ($type ?? null) . '/?sort=method&order=' . ($sort == 'method' ? $negate_order : $order));?>" class="ajax text-decoration-none">
                     <?php $this->_('AdminMain.index.heading_method');?>
